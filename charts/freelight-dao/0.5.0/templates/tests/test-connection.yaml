@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "freelight-dao.fullname" . }}-test-connection"
+  labels:
+    {{- include "freelight-dao.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "freelight-dao.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never
