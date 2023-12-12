@@ -19,4 +19,4 @@ apt update && \
 mkdir -p /etc/docker && \
     echo '{ "features": { "buildkit": true } }' > /etc/docker/daemon.json
 
-echo "sudo usermod -aG docker \$USER" >> /var/run/finish-install.sh
+echo "sudo usermod -aG docker \$USER" >> /var/run/vm-installing

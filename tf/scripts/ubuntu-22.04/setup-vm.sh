@@ -16,4 +16,4 @@ fi
 apt update && \
 apt upgrade -y
 
-echo "#!/usr/bin/env bash" > /var/run/finish-install.sh
+echo "#!/usr/bin/env bash" > /var/run/vm-installing

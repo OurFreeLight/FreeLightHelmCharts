@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "freelight-dao.fullname" . }}:{{ .Values.service.port }}']
+      args: ['{{ include "freelight-dao.fullname" . }}:80']
   restartPolicy: Never

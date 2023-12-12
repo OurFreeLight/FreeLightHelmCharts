@@ -1,6 +1,8 @@
-# tf/gcp/vm.tf
+# tf/gcp/microk8s_vm.tf
 
-data "template_file" "startup_microk8s_script" {
+data "template_file" "microk8s_startup_script" {
+  count    = var.deployment_type == "vm" ? (var.k8s_type == "microk8s" ? 1 : 0) : 0
+
   template = join ("\n", [
       file("../scripts/ubuntu-22.04/setup-vm.sh"),
       file("../scripts/ubuntu-22.04/install-microk8s.tpl"),
@@ -17,6 +19,7 @@ data "template_file" "startup_microk8s_script" {
 resource "google_compute_firewall" "microk8s_firewall" {
   name    = "microk8s-firewall"
   network = "default"
+  count   = var.k8s_type == "microk8s" ? 1 : 0
 
   allow {
     protocol = "tcp"
@@ -31,24 +34,33 @@ resource "google_compute_firewall" "microk8s_firewall" {
   target_tags = ["freelight-microk8s-firewall"]
 }
 
-resource "google_compute_instance" "default" {
-  name         = "freelight-vm"
-  machine_type = var.gcp_vm_instance_type
-  zone         = var.gcp_zone
+data "google_compute_address" "static_ip" {
+  count = var.static_ip_name != "" ? 1 : 0
+  name = var.static_ip_name
+}
+
+resource "google_compute_instance" "microk8s_vm" {
+  name                = "freelight-vm"
+  count               = var.deployment_type == "vm" ? (var.k8s_type == "microk8s" ? 1 : 0) : 0
+  machine_type        = var.gcp_vm_instance_type
+  zone                = var.gcp_zone
+  deletion_protection = var.delete_protection
 
   boot_disk {
     initialize_params {
       image = var.gcp_vm_image
+      size = var.gcp_storage_size
     }
   }
 
   network_interface {
     network = "default"
     access_config {
-      // Ephemeral public IP
+      nat_ip = var.static_ip_name != "" ? data.google_compute_address.static_ip[0].address : null
+      network_tier = var.gcp_network_tier
     }
   }
 
-  metadata_startup_script = data.template_file.startup_microk8s_script.rendered
+  metadata_startup_script = data.template_file.microk8s_startup_script[0].rendered
   tags = ["freelight-microk8s-firewall", "http-server", "https-server"]
 }

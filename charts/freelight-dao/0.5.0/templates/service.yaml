@@ -5,11 +5,11 @@ metadata:
   labels:
     {{- include "freelight-dao.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: ClusterIP
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
+    - port: 5000
+      targetPort: api
       protocol: TCP
-      name: http
+      name: api
   selector:
     {{- include "freelight-dao.selectorLabels" . | nindent 4 }}

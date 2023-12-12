@@ -6,5 +6,7 @@
 *.tfstate
 *.tfstate.backup
 
+custom-values.yaml
+
 .terraform/
 dist/

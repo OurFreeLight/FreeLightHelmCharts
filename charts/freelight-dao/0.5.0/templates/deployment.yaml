@@ -23,37 +23,108 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- if .Values.imageSettings.pullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        - name: {{ .Values.imageSettings.pullSecrets }}
       {{- end }}
       serviceAccountName: {{ include "freelight-dao.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: freelight-dao-api
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.freelightDAO_API.image }}"
+          imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
           ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
+            - name: api
+              containerPort: 5000
               protocol: TCP
           livenessProbe:
             httpGet:
               path: /
-              port: http
+              port: api
           readinessProbe:
             httpGet:
               path: /
-              port: http
+              port: api
+          env:
+            - name: SERVER_TYPE
+              value: "api"
+            - name: LOG_LEVEL
+              value: "{{ .Values.freelightDAO_API.logLevel }}"
+            - name: API_HTTP_PORT
+              value: "5000"
+            - name: BASE_API_URL
+              value: "{{ .Values.freelightDAO_API.baseApiUrl }}"
+            - name: JWT_SECRET_KEY
+              value: "{{ .Values.freelightDAO_API.jwtSecretKey }}"
+            - name: DATABASE_SERVER
+              value: "{{ .Values.freelightDAO_API.database.server }}"
+            - name: DATABASE_PORT
+              value: "{{ .Values.freelightDAO_API.database.port }}"
+            - name: DATABASE_USERNAME
+              value: "{{ .Values.freelightDAO_API.database.username }}"
+            - name: DATABASE_PASSWORD
+              value: "{{ .Values.freelightDAO_API.database.password }}"
+            - name: DATABASE_SCHEMA
+              value: "{{ .Values.freelightDAO_API.database.schema }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+        {{- if .Values.database.deploy }}
+        - name: database
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.database.image }}"
+          imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
+          ports:
+            - name: database
+              containerPort: 3306
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -h
+                - localhost
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -h
+                - localhost
+            initialDelaySeconds: 5
+            periodSeconds: 2
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "{{ .Values.database.rootPassword }}"
+            - name: MYSQL_DATABASE
+              value: "{{ .Values.database.schema }}"
+            - name: MYSQL_USER
+              value: "{{ .Values.database.username }}"
+            - name: MYSQL_PASSWORD
+              value: "{{ .Values.database.password }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
