@@ -1,7 +1,7 @@
 # tf/gcp/microk8s_vm.tf
 
 data "template_file" "microk8s_startup_script" {
-  count    = var.deployment_type == "vm" ? (var.k8s_type == "microk8s" ? 1 : 0) : 0
+  count    = var.backend_deployment_type == "vm" ? (var.k8s_type == "microk8s" ? 1 : 0) : 0
 
   template = join ("\n", [
       file("../scripts/ubuntu-22.04/setup-vm.sh"),
@@ -35,13 +35,13 @@ resource "google_compute_firewall" "microk8s_firewall" {
 }
 
 data "google_compute_address" "static_ip" {
-  count = var.static_ip_name != "" ? 1 : 0
-  name = var.static_ip_name
+  count = var.api_static_ip_name != "" ? 1 : 0
+  name = var.api_static_ip_name
 }
 
 resource "google_compute_instance" "microk8s_vm" {
   name                = "freelight-vm"
-  count               = var.deployment_type == "vm" ? (var.k8s_type == "microk8s" ? 1 : 0) : 0
+  count               = var.backend_deployment_type == "vm" ? (var.k8s_type == "microk8s" ? 1 : 0) : 0
   machine_type        = var.gcp_vm_instance_type
   zone                = var.gcp_zone
   deletion_protection = var.delete_protection
@@ -56,7 +56,7 @@ resource "google_compute_instance" "microk8s_vm" {
   network_interface {
     network = "default"
     access_config {
-      nat_ip = var.static_ip_name != "" ? data.google_compute_address.static_ip[0].address : null
+      nat_ip = var.api_static_ip_name != "" ? data.google_compute_address.static_ip[0].address : null
       network_tier = var.gcp_network_tier
     }
   }

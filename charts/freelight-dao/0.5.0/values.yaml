@@ -24,6 +24,9 @@ database:
   deploy: true
   deployProxy: false
   image: mariadb:10.10
+  storage:
+    size: 20Gi
+    storageClassName: ""
   rootPassword: jlka7sw47aSD234
   schema: freelight_dao
   username: awuiyh34ygsd
@@ -65,8 +68,11 @@ ingress:
   enabled: true
   className: "nginx"
   annotations: {}
+  certManager: 
+    enabled: true
+    email: admin@freelight.org
   hosts:
-    - host: freelight.org
+    - host: api.freelight.org
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -90,19 +96,6 @@ autoscaling:
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
-
-# Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
-
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
 
 nodeSelector: {}
 

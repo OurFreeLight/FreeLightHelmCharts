@@ -6,30 +6,51 @@ variable "k8s_version" {
   default     = "1.27"
 }
 
-variable "deployment_type" {
-  description = "Type of deployment. Can be: vm,gke"
+variable "frontend_deployment_type" {
+  description = "Type of frontend deployment. Can be: none,gcs"
   type        = string
 
   validation {
-    condition     = contains(["vm", "gke"], var.deployment_type)
-    error_message = "Invalid deployment type. Must be: vm,gke"
+    condition     = contains(["none", "gcs"], var.frontend_deployment_type)
+    error_message = "Invalid frontend deployment type. Must be: none,gcs"
   }
 }
 
-variable "static_ip_name" {
-  description = "The name of the existing GCP static IP address"
+variable "backend_deployment_type" {
+  description = "Type of backend deployment. Can be: none,vm,gke"
+  type        = string
+
+  validation {
+    condition     = contains(["none", "vm", "gke"], var.backend_deployment_type)
+    error_message = "Invalid backend deployment type. Must be: none,vm,gke"
+  }
+}
+
+variable "domain" {
+  description = "The domain to use for static web hosting."
+  type        = string
+}
+
+variable "frontend_static_ip_name" {
+  description = "The name of the existing GCP static IP address for the frontend"
+  type        = string
+  default     = ""
+}
+
+variable "api_static_ip_name" {
+  description = "The name of the existing static IP address for the API"
   type        = string
   default     = ""
 }
 
 variable "k8s_type" {
-  description = "Type of kubernetes deployment type. Can be: microk8s,gke"
+  description = "Type of kubernetes deployment type. Can be: microk8s,gke_standard"
   type        = string
   default     = "microk8s"
 
   validation {
-    condition     = contains(["microk8s","gke"], var.k8s_type)
-    error_message = "Invalid kubernetes deployment type. Must be: microk8s,gke"
+    condition     = contains(["microk8s","gke_standard"], var.k8s_type)
+    error_message = "Invalid kubernetes deployment type. Must be: microk8s,gke_standard"
   }
 }
 
@@ -90,6 +111,12 @@ variable "gcp_storage_size" {
   description = "The storage size of the VM or each GKE node"
   type        = string
   default     = 20
+}
+
+variable "gcp_bucket_location" {
+  description = "The location of the GCS bucket for static web hosting."
+  type        = string
+  default     = "US"
 }
 
 variable "delete_protection" {

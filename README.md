@@ -12,7 +12,7 @@ This assumes you have a Kubernetes cluster setup and Helm installed.  If you do 
 ## Setting up the Cluster
 If you do not have a Kubernetes cluster setup, you can use this repo to setup a cluster using [Terraform](https://www.terraform.io/).
 
-The FreeLight Helm Charts repo contains terraform modules that can setup a cluster in several ways. The modules are located in the [tf](tf/) directory.  The modules are:
+The FreeLight Helm Charts repo contains terraform modules that can setup a cluster in several ways. The modules are located in the `tf/` directory.  The modules are:
 * gcp
 
 To get started, clone this repo:
@@ -32,14 +32,22 @@ cd gcp
 
 Create a new `custom.tfvars` file and add the following:
 ```tf
-gcp_project_id        = "YOUR_GCP_PROJECT_ID"
-gcp_credentials_file  = "PATH_TO_YOUR_GCP_CREDENTIALS_FILE"
-deployment_type       = "vm"
-k8s_type              = "microk8s"
-gcp_vm_instance_type  = "e2-medium"
+gcp_project_id           = "YOUR_GCP_PROJECT_ID"
+gcp_credentials_file     = "PATH_TO_YOUR_GCP_CREDENTIALS_FILE"
+domain                   = "staging.freelight.org"
+frontend_deployment_type = "gcs"
+backend_deployment_type  = "gke"
+k8s_version              = "1.27.4-gke.0"
+k8s_type                 = "gke_standard"
+gcp_vm_instance_type     = "e2-medium"
+#api_static_ip_name      = "freelight-vm-static-ip"
+delete_protection        = false
 ```
 
 Add any other variables you may need to that file, then goto the [GCP](#GCP-Module) section below.
+
+## AWS Module
+
 
 ## GCP Module
 The GCP module will create a Kubernetes cluster in GCP.  To use it, you will need to have a GCP account and a project setup.  You will also need to have the [gcloud](https://cloud.google.com/sdk/gcloud) command line tool installed.

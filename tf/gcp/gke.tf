@@ -4,7 +4,7 @@ resource "google_container_cluster" "freelight_cluster" {
   provider           = google-beta
   name               = "freelight-cluster"
   location           = var.gcp_zone
-  count              = var.k8s_type == "gke" ? 1 : 0
+  count              = var.backend_deployment_type == "gke" ? (var.k8s_type == "gke_standard" ? 1 : 0) : 0
   initial_node_count = 1
 
   deletion_protection = var.delete_protection
@@ -67,7 +67,7 @@ resource "google_container_cluster" "freelight_cluster" {
 resource "google_container_node_pool" "freelight_pool_1" {
   provider   = google-beta
   name       = "freelight-pool-1"
-  count      = var.k8s_type == "gke" ? 1 : 0
+  count      = var.backend_deployment_type == "gke" ? (var.k8s_type == "gke_standard" ? 1 : 0) : 0
   location   = var.gcp_zone
   cluster    = google_container_cluster.freelight_cluster[0].name
   node_count = 1

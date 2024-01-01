@@ -9,6 +9,4 @@ fi
 
 cd ./$PROVIDER/
 
-mkdir -p ./dist 2> /dev/null
-
-terraform init
+terraform refresh -var-file="./custom.tfvars"

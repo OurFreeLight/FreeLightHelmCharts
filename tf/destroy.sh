@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 
-REPLY=$1
+PROVIDER=$1
+REPLY=$2
 
-cd ./gcp/
+if [ "$PROVIDER" == "" ]; then
+    echo "Please specify a provider: aws,gcp"
+    exit 1
+fi
+
+cd ./$PROVIDER/
 
 terraform plan -destroy -out=./dist/destroy.tfplan -var-file="./custom.tfvars"
 

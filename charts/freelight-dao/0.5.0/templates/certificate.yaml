@@ -1,0 +1,15 @@
+{{- if .Values.ingress.certManager.enabled }}
+{{- $fullName := include "freelight-dao.fullname" . -}}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $fullName }}-certificate
+spec:
+  secretName: {{ $fullName }}-tls
+  issuerRef:
+    name: {{ $fullName }}-issuer
+  dnsNames:
+  {{- range .Values.ingress.hosts }}
+    - {{ .host | quote }}
+  {{- end }}
+{{- end }}

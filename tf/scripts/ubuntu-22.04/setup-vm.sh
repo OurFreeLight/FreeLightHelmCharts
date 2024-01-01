@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-NEWUSER=$USER
+exec > /var/run/vm-startup-output.log 2>&1
 
 sudo su
 
@@ -17,3 +17,4 @@ apt update && \
 apt upgrade -y
 
 echo "#!/usr/bin/env bash" > /var/run/vm-installing
+echo "git clone https://github.com/OurFreeLight/FreeLightHelmCharts.git ~/FreeLightHelmCharts" >> /var/run/vm-installing

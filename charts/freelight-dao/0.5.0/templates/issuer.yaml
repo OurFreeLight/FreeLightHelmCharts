@@ -1,0 +1,18 @@
+{{- if .Values.ingress.certManager.enabled }}
+{{- $fullName := include "freelight-dao.fullname" . -}}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ $fullName }}-issuer
+spec:
+  acme:
+    email: {{ .Values.ingress.certManager.email }}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ $fullName }}-private-key
+    solvers:
+    - selector: {}
+      http01:
+        ingress:
+          class: {{ .Values.ingress.className }}
+{{- end }}

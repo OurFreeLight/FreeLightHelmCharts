@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "freelight-dao.labels" . | nindent 8 }}
+        {{- include "freelight-dao.selectorLabels" . | nindent 8 }}
 	{{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -120,15 +120,16 @@ spec:
               value: "{{ .Values.database.password }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            - mountPath: /var/lib/mysql
+              name: database-data
         {{- end }}
-      {{- with .Values.volumes }}
       volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if .Values.database.deploy }}
+        - name: database-data
+          persistentVolumeClaim:
+            claimName: {{ include "freelight-dao.fullname" . }}-database-data
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

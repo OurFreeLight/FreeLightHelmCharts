@@ -9,6 +9,5 @@ fi
 
 cd ./$PROVIDER/
 
-mkdir -p ./dist 2> /dev/null
-
-terraform init
+terraform show -json ./dist/up.tfplan > ./dist/up.tfplan.json
+infracost breakdown --path ./dist/up.tfplan.json
