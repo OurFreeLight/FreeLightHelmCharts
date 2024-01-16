@@ -1,3 +1,21 @@
+{{- if .Values.database.deploy -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "freelight-dao.fullname" . }}-db-service
+  labels:
+    {{- include "freelight-dao.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: database
+      protocol: TCP
+      name: database
+  selector:
+    {{- include "freelight-dao.selectorLabels" . | nindent 4 }}
+---
+{{- end -}}
 apiVersion: v1
 kind: Service
 metadata:

@@ -1,3 +1,8 @@
+{{- $databaseServer := .Values.freelightDAO_API.database.server -}}
+{{- if .Values.database.deploy -}}
+{{- $databaseServer = include "freelight-dao.serviceAccountName" . -}}
+{{- $databaseServer = print $databaseServer "-db-service" -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,6 +35,26 @@ spec:
       serviceAccountName: {{ include "freelight-dao.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: freelight-dao-init
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Waiting for database to be ready at {{ $databaseServer }}:{{ .Values.freelightDAO_API.database.port }}"
+              while ! nc -z {{ $databaseServer }} {{ .Values.freelightDAO_API.database.port }}; do
+                sleep 1
+              done
+              echo "Database ready"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       containers:
         - name: freelight-dao-api
           securityContext:
@@ -59,8 +84,10 @@ spec:
               value: "{{ .Values.freelightDAO_API.baseApiUrl }}"
             - name: JWT_SECRET_KEY
               value: "{{ .Values.freelightDAO_API.jwtSecretKey }}"
+            - name: RECAPTCHA_KEY
+              value: "{{ .Values.freelightDAO_API.recaptchaKey }}"
             - name: DATABASE_SERVER
-              value: "{{ .Values.freelightDAO_API.database.server }}"
+              value: "{{ $databaseServer }}"
             - name: DATABASE_PORT
               value: "{{ .Values.freelightDAO_API.database.port }}"
             - name: DATABASE_USERNAME
@@ -75,61 +102,6 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- if .Values.database.deploy }}
-        - name: database
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.database.image }}"
-          imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
-          ports:
-            - name: database
-              containerPort: 3306
-              protocol: TCP
-          livenessProbe:
-            exec:
-              command:
-                - mysqladmin
-                - ping
-                - -h
-                - localhost
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 3
-          readinessProbe:
-            exec:
-              command:
-                - mysqladmin
-                - ping
-                - -h
-                - localhost
-            initialDelaySeconds: 5
-            periodSeconds: 2
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 3
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: "{{ .Values.database.rootPassword }}"
-            - name: MYSQL_DATABASE
-              value: "{{ .Values.database.schema }}"
-            - name: MYSQL_USER
-              value: "{{ .Values.database.username }}"
-            - name: MYSQL_PASSWORD
-              value: "{{ .Values.database.password }}"
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            - mountPath: /var/lib/mysql
-              name: database-data
-        {{- end }}
-      volumes:
-        {{- if .Values.database.deploy }}
-        - name: database-data
-          persistentVolumeClaim:
-            claimName: {{ include "freelight-dao.fullname" . }}-database-data
-        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

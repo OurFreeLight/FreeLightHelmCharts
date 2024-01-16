@@ -142,9 +142,13 @@ resource "aws_acm_certificate_validation" "freelight_acm_certificate_validation"
   validation_record_fqdns = [for record in aws_route53_record.freelight_acm_certificate_dns_record : record.fqdn]
 }
 
+locals {
+  domain_dashes = replace(var.domain, "/[^a-zA-Z0-9]/", "_")
+}
+
 # CloudFront distribution for static web hosting
 resource "aws_cloudfront_cache_policy" "freelight_cloudfront_cache_policy" {
-  name        = "freelight-caching-policy"
+  name        = "${local.domain_dashes}-freelight-caching-policy"
   depends_on  = [aws_acm_certificate_validation.freelight_acm_certificate_validation[0]]
   count       = var.frontend_deployment_type == "cloudfront" ? 1 : 0
   comment     = "Freelight cache policy"

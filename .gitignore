@@ -8,6 +8,11 @@
 *.tfstate.backup
 
 custom-values.yaml
+.current-env
+
+env.*/
 
 .terraform/
 dist/
+
+custom/
