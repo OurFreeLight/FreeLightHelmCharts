@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
-PROVIDER=$1
+ENV=$1
+PROVIDER=$2
+
+if [ "$ENV" == "" ]; then
+    echo "Please specify an environment: staging,production,..."
+    exit 1
+fi
 
 if [ "$PROVIDER" == "" ]; then
     echo "Please specify a provider: aws,gcp"

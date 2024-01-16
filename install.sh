@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-VERSION=${1:-"0.5.0"}
-NAMESPACE="freelight-dao"
+ENV=$1
+VERSION=${2:-"0.5.0"}
+NAMESPACE=${3:-"staging"}
 
-cd ./charts/freelight-dao/$VERSION/
-
-if [ ! -f "./custom-values.yaml" ]; then
-    echo "./charts/freelight-dao/$VERSION/custom-values.yaml file is missing."
+if [ ! -f "./env.$ENV/custom-values.yaml" ]; then
+    echo "./env.$ENV/custom-values.yaml file is missing."
 
     exit 1
 fi
 
-helm install freelight-dao . --namespace $NAMESPACE --create-namespace --values ./custom-values.yaml
+helm install freelight-dao ./charts/freelight-dao/$VERSION/ \
+    --namespace $NAMESPACE --create-namespace \
+    --values ./env.$ENV/custom-values.yaml

@@ -27,7 +27,7 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_security_group" "freelight_security_group" {
-  name        = "freelight_security_group"
+  name        = "${var.domain}_freelight_security_group"
   count       = var.backend_deployment_type == "vm" ? (var.k8s_type == "microk8s" ? 1 : 0) : 0
   description = "Allow ports 80, 443, and 16443"
 
@@ -78,8 +78,12 @@ resource "aws_instance" "freelight_instance" {
 
   key_name                = var.aws_key_pair_name
 
+  root_block_device {
+    volume_size           = var.aws_storage_size
+  }
+
   tags = {
-    Name = "Freelight"
+    Name                  = "Freelight"
   }
 }
 

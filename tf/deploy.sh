@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
 
-PROVIDER=$1
-REPLY=$2
+ENV=$1
+PROVIDER=$2
+REPLY=$3
+
+if [ "$ENV" == "" ]; then
+    echo "Please specify an environment: staging,production,..."
+    exit 1
+fi
 
 if [ "$PROVIDER" == "" ]; then
     echo "Please specify a provider: aws,gcp"
+    exit 1
+fi
+
+if [ ! -f "./$PROVIDER/custom.tfvars" ]; then
+    echo "./$PROVIDER/custom.tfvars file is missing."
     exit 1
 fi
 
