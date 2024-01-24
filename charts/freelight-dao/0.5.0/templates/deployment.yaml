@@ -96,6 +96,12 @@ spec:
               value: "{{ .Values.freelightDAO_API.database.password }}"
             - name: DATABASE_SCHEMA
               value: "{{ .Values.freelightDAO_API.database.schema }}"
+            - name: AWS_SES_REGION
+              value: "{{ .Values.freelightDAO_API.aws.ses.region }}"
+            - name: AWS_ACCESS_KEY_ID
+              value: "{{ .Values.freelightDAO_API.aws.ses.accessKey }}"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "{{ .Values.freelightDAO_API.aws.ses.secretKey }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- with .Values.volumeMounts }}

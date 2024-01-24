@@ -8,4 +8,6 @@ if [ "$NAMESPACE" == "" ]; then
     exit 1
 fi
 
+echo "Uninstalling from namespace $NAMESPACE"
+
 helm uninstall freelight-dao --namespace $NAMESPACE
