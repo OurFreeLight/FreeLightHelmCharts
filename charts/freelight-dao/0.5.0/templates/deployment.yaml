@@ -80,6 +80,8 @@ spec:
               value: "{{ .Values.freelightDAO_API.logLevel }}"
             - name: API_HTTP_PORT
               value: "5000"
+            - name: BASE_URL
+              value: "{{ .Values.freelightDAO_API.baseWebUrl }}"
             - name: BASE_API_URL
               value: "{{ .Values.freelightDAO_API.baseApiUrl }}"
             - name: JWT_SECRET_KEY
@@ -102,6 +104,8 @@ spec:
               value: "{{ .Values.freelightDAO_API.aws.ses.accessKey }}"
             - name: AWS_SECRET_ACCESS_KEY
               value: "{{ .Values.freelightDAO_API.aws.ses.secretKey }}"
+            - name: SEED_USERS
+              value: "[{ \"userType\": \"admin\", \"firstName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.firstName }}\", \"lastName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.lastName }}\", \"displayName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.displayName }}\", \"email\": \"{{ .Values.freelightDAO_API.defaultAdminUser.email }}\", \"password\": \"{{ .Values.freelightDAO_API.defaultAdminUser.password }}\", \"verified\": true }]"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- with .Values.volumeMounts }}

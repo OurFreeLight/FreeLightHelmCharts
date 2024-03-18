@@ -11,8 +11,15 @@ imageSettings:
 freelightDAO_API:
   image: ourfreelight/freelight-dao-api:0.5.0
   logLevel: verbose
+  baseWebUrl: http://localhost:5000
   baseApiUrl: http://localhost:5000
   jwtSecretKey: hw4978a97w3ha78w3hartaw345
+  defaultAdminUser:
+    firstName: Bobbithy
+    lastName: Derpitty
+    displayName: AdminGuy
+    email: email@email.com
+    password: m7sa4w5asw45m8aw45m
   recaptchaKey:
   aws:
     ses:
