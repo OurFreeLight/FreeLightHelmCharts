@@ -3,6 +3,13 @@
 {{- $databaseServer = include "freelight-dao.serviceAccountName" . -}}
 {{- $databaseServer = print $databaseServer "-db-service" -}}
 {{- end -}}
+{{- $garnetServer := .Values.freelightDAO_API.garnet.server -}}
+{{- $garnetUrl := printf "redis://%s:%s" .Values.freelightDAO_API.garnet.server (.Values.freelightDAO_API.garnet.port | toString) -}}
+{{- if .Values.garnet.deploy -}}
+{{- $garnetServer = include "freelight-dao.serviceAccountName" . -}}
+{{- $garnetServer = print $garnetServer "-garnet-service" -}}
+{{- $garnetUrl = printf "redis://%s:%s" $garnetServer (.Values.freelightDAO_API.garnet.port | toString) -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,12 +56,40 @@ spec:
                 sleep 1
               done
               echo "Database ready"
+
+              echo "Waiting for Garnet to be ready at {{ $garnetServer }}:{{ .Values.freelightDAO_API.garnet.port }}"
+              while ! nc -z {{ $garnetServer }} {{ .Values.freelightDAO_API.garnet.port }}; do
+                sleep 1
+              done
+              echo "Garnet ready"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+        {{- if .Values.freelightDAO_API.database.runMigrations }}
+        - name: freelight-dao-migrations
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.freelightDAO_API.database.runMigrationsImage | quote }}
+          imagePullPolicy: Always
+          env:
+            - name: DATABASE_SERVER
+              value: {{ $databaseServer | quote }}
+            - name: DATABASE_PORT
+              value: {{ .Values.freelightDAO_API.database.port | quote }}
+            - name: MYSQL_USER
+              value: {{ .Values.freelightDAO_API.database.username | quote }}
+            - name: MYSQL_PASSWORD
+              value: {{ .Values.freelightDAO_API.database.password | quote }}
+            - name: MYSQL_DATABASE
+              value: {{ .Values.freelightDAO_API.database.schema | quote }}
+            - name: RUN_MIGRATIONS
+              value: "1"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        {{- end }}
       containers:
         - name: freelight-dao-api
           securityContext:
@@ -104,6 +139,8 @@ spec:
               value: "{{ .Values.freelightDAO_API.aws.ses.accessKey }}"
             - name: AWS_SECRET_ACCESS_KEY
               value: "{{ .Values.freelightDAO_API.aws.ses.secretKey }}"
+            - name: GARNET_URL
+              value: {{ $garnetUrl | quote }}
             - name: SEED_USERS
               value: "[{ \"userType\": \"admin\", \"firstName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.firstName }}\", \"lastName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.lastName }}\", \"displayName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.displayName }}\", \"email\": \"{{ .Values.freelightDAO_API.defaultAdminUser.email }}\", \"password\": \"{{ .Values.freelightDAO_API.defaultAdminUser.password }}\", \"verified\": true }]"
           resources:

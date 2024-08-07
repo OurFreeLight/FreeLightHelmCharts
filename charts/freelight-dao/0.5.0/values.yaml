@@ -9,7 +9,7 @@ imageSettings:
   pullPolicy: IfNotPresent
 
 freelightDAO_API:
-  image: ourfreelight/freelight-dao-api:0.5.0
+  image: ourfreelight/freelight-dao-api:0.5.2-staging
   logLevel: verbose
   baseWebUrl: http://localhost:5000
   baseApiUrl: http://localhost:5000
@@ -32,6 +32,11 @@ freelightDAO_API:
     username: awuiyh34ygsd
     password: 3ui45hiyuawer
     schema: freelight_dao
+    runMigrations: true
+    runMigrationsImage: ourfreelight/mariadb-migrations:0.5.2-staging
+  garnet:
+    server: localhost
+    port: 6379
 
 database:
   deploy: true
@@ -44,6 +49,10 @@ database:
   schema: freelight_dao
   username: awuiyh34ygsd
   password: 3ui45hiyuawer
+
+garnet:
+  deploy: true
+  image: ghcr.io/microsoft/garnet:1
 
 dicebear:
   deploy: true

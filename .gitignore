@@ -6,6 +6,7 @@
 *.tfplan.json
 *.tfstate
 *.tfstate.backup
+terraform.*.backup
 
 custom-values.yaml
 .current-env

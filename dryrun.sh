@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 
-VERSION=${1:-"0.5.0"}
+ENV=$1
+VERSION=${2:-"0.5.0"}
 
-cd ./charts/freelight-dao/$VERSION/
-
-if [ ! -f "./custom-values.yaml" ]; then
-    echo "./charts/freelight-dao/$VERSION/custom-values.yaml file is missing."
+if [ "$ENV" == "" ]; then
+    echo "Please specify the environment: ./install.sh staging"
 
     exit 1
 fi
 
-helm template --debug --values ./custom-values.yaml --dry-run .
+if [ ! -f "./env.$ENV/custom-values.yaml" ]; then
+    echo "./env.$ENV/custom-values.yaml file is missing."
+
+    exit 1
+fi
+
+helm template --debug --values ./env.$ENV/custom-values.yaml --dry-run ./charts/freelight-dao/$VERSION/

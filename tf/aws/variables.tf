@@ -3,7 +3,7 @@
 variable "k8s_version" {
   description = "The version of Kubernetes to use"
   type        = string
-  default     = "1.27"
+  default     = "1.29"
 }
 
 variable "k8s_type" {
@@ -94,6 +94,12 @@ variable "aws_eks_node_group_iam_role_arn" {
 
 variable "delete_protection" {
   description = "Will enable delete protection on the environment being created."
+  type        = bool
+  default     = true
+}
+
+variable "aws_route53_modify_dns" {
+  description = "Will make modifications to the dns records for cert validation and cloudfront setup."
   type        = bool
   default     = true
 }

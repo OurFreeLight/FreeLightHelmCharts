@@ -16,8 +16,22 @@ if [ ! -f "./env.$ENV/custom-values.yaml" ]; then
     exit 1
 fi
 
+if [ ! -f "./.env" ]; then
+  echo ".env file is missing."
+
+  exit 1
+fi
+
+source ./.env
+
+KUBECONFIG_STR=""
+
+if [ "$KUBECONFIG_PATH" != "" ]; then
+  KUBECONFIG_STR="--kubeconfig $KUBECONFIG_PATH"
+fi
+
 echo "Installing environment $ENV into namespace $NAMESPACE"
 
-helm install freelight-dao ./charts/freelight-dao/$VERSION/ \
+helm install $KUBECONFIG_STR freelight-dao ./charts/freelight-dao/$VERSION/ \
     --namespace $NAMESPACE --create-namespace \
     --values ./env.$ENV/custom-values.yaml
