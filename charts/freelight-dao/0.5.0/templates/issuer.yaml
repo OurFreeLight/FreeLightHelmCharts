@@ -15,4 +15,20 @@ spec:
       http01:
         ingress:
           class: {{ .Values.ingress.className }}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ $fullName }}-dicebear-issuer
+spec:
+  acme:
+    email: {{ .Values.ingress.certManager.email }}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ $fullName }}-dicebear-private-key
+    solvers:
+    - selector: {}
+      http01:
+        ingress:
+          class: {{ .Values.ingress.className }}
 {{- end }}

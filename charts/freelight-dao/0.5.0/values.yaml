@@ -57,6 +57,9 @@ garnet:
 dicebear:
   deploy: true
   image: dicebear/api:2
+  ingress:
+    hosts:
+      - host: dicebear.freelight.org
 
 nameOverride: ""
 fullnameOverride: ""

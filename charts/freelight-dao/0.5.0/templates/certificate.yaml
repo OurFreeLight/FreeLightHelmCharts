@@ -12,4 +12,17 @@ spec:
   {{- range .Values.ingress.hosts }}
     - {{ .host | quote }}
   {{- end }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $fullName }}-dicebear-certificate
+spec:
+  secretName: {{ $fullName }}-dicebear-tls
+  issuerRef:
+    name: {{ $fullName }}-dicebear-issuer
+  dnsNames:
+  {{- range .Values.dicebear.ingress.hosts }}
+    - {{ .host | quote }}
+  {{- end }}
 {{- end }}
