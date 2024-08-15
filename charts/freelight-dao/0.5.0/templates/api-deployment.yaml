@@ -87,6 +87,8 @@ spec:
               value: {{ .Values.freelightDAO_API.database.schema | quote }}
             - name: RUN_MIGRATIONS
               value: "1"
+            - name: SEED_ISSUE_STATUSES
+              value: '[{ "name": "Draft", "description": "The issue is not ready to be done, this needs to be thought out more and refined." }, { "name": "To Do", "description": "The issue is ready to be done." }, { "name": "In Progress", "description": "The issue is in progress." }, { "name": "Ready for Review", "description": "The issue has work completed and is ready to be reviewed." }, { "name": "Done", "description": "The issue is complete." }, { "name": "Rejected", "description": "The issue was rejected." }]'
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
         {{- end }}
