@@ -62,13 +62,13 @@ variable "aws_region" {
 variable "aws_vm_admin_instance_type" {
   description = "The instance type for the admin VM"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.large"
 }
 
 variable "aws_vm_instance_type" {
   description = "The instance type for the VM"
   type        = string
-  default     = "t3.small"
+  default     = "t3.large"
 }
 
 variable "aws_storage_size" {
