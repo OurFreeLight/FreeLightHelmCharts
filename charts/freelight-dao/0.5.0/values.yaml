@@ -9,7 +9,7 @@ imageSettings:
   pullPolicy: IfNotPresent
 
 freelightDAO_API:
-  image: ourfreelight/freelight-dao-api:0.5.2-staging
+  image: ourfreelight/freelight-dao-api:0.5.3-staging
   logLevel: verbose
   baseWebUrl: http://localhost:5000
   baseApiUrl: http://localhost:5000
@@ -32,8 +32,21 @@ freelightDAO_API:
     username: awuiyh34ygsd
     password: 3ui45hiyuawer
     schema: freelight_dao
-    runMigrations: true
-    runMigrationsImage: ourfreelight/mariadb-migrations:0.5.2-staging
+    migrations: 
+      enabled: true
+      image: ourfreelight/mariadb-utils:0.5.3-staging
+    backup:
+      enabled: true
+      image: ourfreelight/mariadb-utils:0.5.3-staging
+      schedule: "0 1 * * 5"
+      type: "aws-s3"
+      password: "ah3475aw3h4768aw3h"
+      aws:
+        accessKeyId: ""
+        secretAccessKey: ""
+        defaultRegion: ""
+        bucketName: ""
+        bucketPath: ""
   garnet:
     server: localhost
     port: 6379

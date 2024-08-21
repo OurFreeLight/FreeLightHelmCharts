@@ -68,12 +68,12 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- if .Values.freelightDAO_API.database.runMigrations }}
+        {{- if .Values.freelightDAO_API.database.migrations.enabled }}
         - name: freelight-dao-migrations
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ .Values.freelightDAO_API.database.runMigrationsImage | quote }}
-          imagePullPolicy: Always
+          image: {{ .Values.freelightDAO_API.database.migrations.image | quote }}
+          imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
           env:
             - name: DATABASE_SERVER
               value: {{ $databaseServer | quote }}
