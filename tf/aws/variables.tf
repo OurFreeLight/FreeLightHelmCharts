@@ -47,6 +47,16 @@ variable "domain" {
   type        = string
 }
 
+variable "domain_landing" {
+  description = "The domain for the landing page to use for static web hosting."
+  type        = string
+}
+
+variable "domain_docs" {
+  description = "The domain for the docs to use for static web hosting."
+  type        = string
+}
+
 variable "api_static_ip_name" {
   description = "The name of the existing static IP address for the API"
   type        = string

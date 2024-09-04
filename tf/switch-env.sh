@@ -19,6 +19,8 @@ mkdir -p ./env.$ENV/dist 2> /dev/null
 
 PREV_ENV=$(cat ./.current-env 2> /dev/null)
 
+echo "Moving from $PREV_ENV to $ENV"
+
 # Move the current environment into the previous environment's folder.
 mv -f ./custom.tfvars ./env.$PREV_ENV/custom.tfvars 2> /dev/null
 mv -f ./.terraform.lock.hcl ./env.$PREV_ENV/.terraform.lock.hcl 2> /dev/null
