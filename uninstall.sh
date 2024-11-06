@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 NAMESPACE=$1
+CHART=${2:-"freelight-dao"}
 
 if [ "$NAMESPACE" == "" ]; then
     echo "Please specify a namespace to uninstall from: staging,production,..."
@@ -22,6 +23,6 @@ if [ "$KUBECONFIG_PATH" != "" ]; then
   KUBECONFIG_STR="--kubeconfig $KUBECONFIG_PATH"
 fi
 
-echo "Uninstalling from namespace $NAMESPACE"
+echo "Uninstalling chart $CHART from namespace $NAMESPACE"
 
-helm uninstall $KUBECONFIG_STR freelight-dao --namespace $NAMESPACE
+helm uninstall $KUBECONFIG_STR $CHART --namespace $NAMESPACE

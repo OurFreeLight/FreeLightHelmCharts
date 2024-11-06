@@ -1,3 +1,4 @@
+{{- if .Values.freelightDAO_API.enabled -}}
 {{- $databaseServer := .Values.freelightDAO_API.database.server -}}
 {{- if .Values.database.deploy -}}
 {{- $databaseServer = include "freelight-dao.serviceAccountName" . -}}
@@ -147,10 +148,13 @@ spec:
               value: "[{ \"userType\": \"admin\", \"firstName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.firstName }}\", \"lastName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.lastName }}\", \"displayName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.displayName }}\", \"email\": \"{{ .Values.freelightDAO_API.defaultAdminUser.email }}\", \"password\": \"{{ .Values.freelightDAO_API.defaultAdminUser.password }}\", \"verified\": true }]"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            - name: freelight-dao-api-data
+              mountPath: /app/data
+      volumes:
+        - name: freelight-dao-api-data
+          persistentVolumeClaim:
+            claimName: {{ include "freelight-dao.fullname" . }}-api
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -163,3 +167,4 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end -}}

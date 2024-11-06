@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "freelight-dao.fullname" . }}-api
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.freelightDAO_API.data.size }}
+  storageClassName: {{ .Values.freelightDAO_API.data.storageClassName }}
+status: {}

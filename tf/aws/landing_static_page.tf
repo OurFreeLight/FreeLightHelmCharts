@@ -101,7 +101,10 @@ resource "aws_acm_certificate" "freelight_landing_acm_certificate" {
     certificate_transparency_logging_preference = "ENABLED"
   }
 
-  subject_alternative_names = [var.domain_landing]
+  subject_alternative_names = concat(
+    [var.domain_landing],
+    var.domain_alt_landing != "" ? [var.domain_alt_landing] : []
+  )
 
   tags = {
     Name = var.domain_landing

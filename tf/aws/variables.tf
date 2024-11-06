@@ -52,6 +52,12 @@ variable "domain_landing" {
   type        = string
 }
 
+variable "domain_alt_landing" {
+  description = "The alt domain for the landing page to use for static web hosting."
+  type        = string
+  default     = ""
+}
+
 variable "domain_docs" {
   description = "The domain for the docs to use for static web hosting."
   type        = string

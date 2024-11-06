@@ -1,0 +1,96 @@
+{{- if .Values.freelightDAO_frontend.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  config.json: |-
+    {
+      "baseUrl": "https://api.freelight.org",
+      "wsUrl": "wss://api.freelight.org",
+      "diceBearUrl": "https://avatars.freelight.org",
+      "paypalDonateUrl": "https://www.paypal.com/donate/?hosted_button_id=JGLWZJXHUHEMS",
+      "header": {
+        "TITLE": "FreeLight DAO",
+        "PANEL_NAME": "FreeLight DAO",
+        "SIDEBAR_ITEMS": [
+          {
+            "url": "/users",
+            "icon": "<span data-feather=\"user\" class=\"align-text-bottom\" id = \"Header_Users\"></span>",
+            "label": "Users"
+          },
+          {
+            "url": "/proposals",
+            "icon": "<span data-feather=\"coffee\" class=\"align-text-bottom\" id = \"Header_Proposals\"></span>",
+            "label": "Proposals"
+          },
+          {
+            "url": "/projects",
+            "icon": "<span data-feather=\"book-open\" class=\"align-text-bottom\" id = \"Header_Projects\"></span>",
+            "label": "Projects"
+          },
+          {
+            "url": "/bankAccounts",
+            "icon": "<span data-feather=\"briefcase\" class=\"align-text-bottom\" id = \"Header_BankAccounts\"></span>",
+            "label": "Bank Accounts"
+          },
+          {
+            "url": "/budgets",
+            "icon": "<span data-feather=\"folder\" class=\"align-text-bottom\" id = \"Header_Budgets\"></span>",
+            "label": "Budgets"
+          },
+          {
+            "url": "/expenses",
+            "icon": "<span data-feather=\"bar-chart-2\" class=\"align-text-bottom\" id = \"Header_Expenses\"></span>",
+            "label": "Expenses"
+          },
+          {
+            "url": "/income",
+            "icon": "<span data-feather=\"dollar-sign\" class=\"align-text-bottom\" id = \"Header_Income\"></span>",
+            "label": "Income"
+          },
+          {
+            "url": "/agreements",
+            "icon": "<span data-feather=\"check-square\" class=\"align-text-bottom\" id = \"Header_Agreements\"></span>",
+            "label": "Agreements"
+          },
+          {
+            "url": "/relationships",
+            "icon": "<span data-feather=\"table\" class=\"align-text-bottom\" id = \"Header_Relationships\"></span>",
+            "label": "Relationships"
+          },
+          {
+            "url": "/channels",
+            "icon": "<span data-feather=\"tv\" class=\"align-text-bottom\" id = \"Header_Channels\"></span>",
+            "label": "Channels"
+          },
+          {
+            "url": "/settings",
+            "icon": "<span data-feather=\"cpu\" class=\"align-text-bottom\" id = \"Header_Settings\"></span>",
+            "label": "Settings"
+          }],
+        "SIGNOUT_CALL": "signOut ();",
+        "HEADER_JS_FILES": ["./js/common.js", "./js/quill@2.js"],
+        "HEADER_CSS_FILES": ["./css/quill@2.bubble.css", "./css/quill@2.snow.css"]
+      },
+      "routePermissions": {
+        "/agreements": "public",
+        "/bankAccounts": "public",
+        "/budgets": "public",
+        "/expenses": "public",
+        "/income": "public",
+        "/": "public",
+        "/login": "public",
+        "/register": "public",
+        "/project": "public",
+        "/projects": "public",
+        "/proposals": "public",
+        "/relationships": "public",
+        "/users": "mod",
+        "/approvals": "mod",
+        "/channels": "admin",
+        "/settings": "admin"
+      },
+      "siteKey": "6LeLi9kZAAAAAOYXkLZs_A6dkOSNjNk6FaWSggaF"
+    }
+{{- end -}}

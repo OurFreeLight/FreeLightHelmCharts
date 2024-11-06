@@ -34,6 +34,25 @@ spec:
     {{- include "freelight-dao.selectorLabels" . | nindent 4 }}
 ---
 {{- end -}}
+{{- if .Values.freelightDAO_frontend.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "freelight-dao.fullname" . }}-frontend-service
+  labels:
+    {{- include "freelight-dao.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: frontend-http
+      protocol: TCP
+      name: frontend-http
+  selector:
+    {{- include "freelight-dao.selectorLabels" . | nindent 4 }}
+---
+{{- end -}}
+{{- if .Values.freelightDAO_API.enabled -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -65,4 +84,5 @@ spec:
       name: dicebear-api
   selector:
     {{- include "freelight-dao.selectorLabels" . | nindent 4 }}
+{{- end -}}
 

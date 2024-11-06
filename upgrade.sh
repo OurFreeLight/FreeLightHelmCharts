@@ -31,8 +31,8 @@ if [ "$KUBECONFIG_PATH" != "" ]; then
   KUBECONFIG_STR="--kubeconfig $KUBECONFIG_PATH"
 fi
 
-echo "Installing chart $CHART for environment $ENV into namespace $NAMESPACE"
+echo "Upgrading chart $CHART for environment $ENV into namespace $NAMESPACE"
 
-helm install $KUBECONFIG_STR $CHART ./charts/$CHART/$VERSION/ \
+helm upgrade --install $KUBECONFIG_STR $CHART ./charts/$CHART/$VERSION/ \
     --namespace $NAMESPACE --create-namespace \
     --values ./env.$ENV/$CHART/custom-values.yaml
