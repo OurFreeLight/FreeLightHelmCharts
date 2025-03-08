@@ -17,3 +17,5 @@ env.*/
 dist/
 
 custom/
+
+chart-values/

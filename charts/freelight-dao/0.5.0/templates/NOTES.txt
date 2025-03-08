@@ -20,3 +20,9 @@
   echo "Visit http://127.0.0.1:8080 to use your application"
   kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
 {{- end }}
+{{- if .Values.freelightDAO_API.debugEnabled }}
+WARNING: DEBUG MODE IS ENABLED. PORT 9229 IS OPEN. You will have to port-forward into the pod to access it.
+{{- end }}
+{{- if .Values.freelightDAO_API.swaggerUIEnabled }}
+WARNING: SWAGGER UI IS ENABLED. You can access it on /swagger/
+{{- end }}

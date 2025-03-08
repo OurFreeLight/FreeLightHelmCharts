@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ENV=$1
-NAMESPACE=$ENV
+NAMESPACE=${2:-"$ENV"}
 
 if [ "$ENV" == "" ]; then
     echo "Please specify the environment: ./install-garnet.sh staging"

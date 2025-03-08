@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ENV=$1
-NAMESPACE=$ENV
+NAMESPACE=${2:-"$ENV"}
 
 if [ "$ENV" == "" ]; then
     echo "Please specify the environment: ./install-db.sh staging"
@@ -24,16 +24,15 @@ if [ "$KUBECONFIG_PATH" != "" ]; then
 fi
 
 # Setup Database
-echo "Setting up MariaDB..."
+echo "Setting up Postgres..."
 helm repo add bitnami https://charts.bitnami.com/bitnami
 
 # Install Database
-echo "Installing MariaDB $MARIADB_VERSION"
+echo "Installing Postgres $POSTGRES_VERSION"
 
-helm install $KUBECONFIG_STR mariadb bitnami/mariadb --version=$MARIADB_VERSION \
+helm install $KUBECONFIG_STR postgres bitnami/postgresql --version=$POSTGRES_VERSION \
   --namespace $NAMESPACE --create-namespace \
-  --set auth.rootPassword=$MARIADB_ROOT_PASSWORD \
-  --set auth.database=$MARIADB_DATABASE \
-  --set auth.username=$MARIADB_USERNAME \
-  --set auth.password=$MARIADB_PASSWORD
+  --set auth.database=$POSTGRES_DB \
+  --set auth.username=$POSTGRES_USER \
+  --set auth.password=$POSTGRES_PASSWORD
 echo "Finished installing Database..."

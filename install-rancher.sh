@@ -21,7 +21,7 @@ kubectl $KUBECONFIG_STR create namespace cattle-system
 
 # Install rancher
 echo "Installing rancher $RANCHER_VERSION"
-helm install $KUBECONFIG_STR rancher rancher-stable/rancher --version=$RANCHER_VERSION \
+helm $KUBECONFIG_STR upgrade --install rancher rancher-stable/rancher --version=$RANCHER_VERSION \
   --namespace cattle-system \
   --set hostname=$DOMAIN \
   --set replicas=1 \

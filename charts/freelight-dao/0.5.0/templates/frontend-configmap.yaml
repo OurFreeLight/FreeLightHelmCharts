@@ -9,7 +9,8 @@ data:
       "baseUrl": "https://api.freelight.org",
       "wsUrl": "wss://api.freelight.org",
       "diceBearUrl": "https://avatars.freelight.org",
-      "paypalDonateUrl": "https://www.paypal.com/donate/?hosted_button_id=JGLWZJXHUHEMS",
+      "cookiesDomain": ".freelight.org",
+      "paypalDonateUrl": "https://www.freelight.org/donate.html",
       "header": {
         "TITLE": "FreeLight DAO",
         "PANEL_NAME": "FreeLight DAO",
@@ -69,27 +70,33 @@ data:
             "icon": "<span data-feather=\"cpu\" class=\"align-text-bottom\" id = \"Header_Settings\"></span>",
             "label": "Settings"
           }],
-        "SIGNOUT_CALL": "signOut ();",
+        "SIGNOUT_CALL": "signOut ('.freelight.org');",
         "HEADER_JS_FILES": ["./js/common.js", "./js/quill@2.js"],
         "HEADER_CSS_FILES": ["./css/quill@2.bubble.css", "./css/quill@2.snow.css"]
       },
       "routePermissions": {
         "/agreements": "public",
+        "/approvals": "mod",
         "/bankAccounts": "public",
         "/budgets": "public",
+        "/channel": "public",
+        "/channels": "admin",
         "/expenses": "public",
+        "/forgot": "public",
         "/income": "public",
         "/": "public",
         "/login": "public",
-        "/register": "public",
+        "/moderators": "mod",
         "/project": "public",
         "/projects": "public",
         "/proposals": "public",
+        "/register": "public",
         "/relationships": "public",
+        "/resetPassword": "public",
+        "/settings": "admin",
+        "/thankYou": "public",
         "/users": "mod",
-        "/approvals": "mod",
-        "/channels": "admin",
-        "/settings": "admin"
+        "/verify": "public"
       },
       "siteKey": "6LeLi9kZAAAAAOYXkLZs_A6dkOSNjNk6FaWSggaF"
     }

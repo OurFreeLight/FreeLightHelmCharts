@@ -1,7 +1,10 @@
+{{- if eq .Values.freelightDAO_API.fileStorage.location "local" -}}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "freelight-dao.fullname" . }}-api
+  name: {{ include "freelight-dao.fullname" . }}-api-pvc
+  annotations:
+    helm.sh/resource-policy: keep
 spec:
   accessModes:
     - ReadWriteOnce
@@ -9,4 +12,4 @@ spec:
     requests:
       storage: {{ .Values.freelightDAO_API.data.size }}
   storageClassName: {{ .Values.freelightDAO_API.data.storageClassName }}
-status: {}
+{{- end -}}

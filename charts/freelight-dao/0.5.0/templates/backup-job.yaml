@@ -9,7 +9,7 @@ kind: CronJob
 metadata:
   name: {{ include "freelight-dao.fullname" . }}-backup-job
   labels:
-    {{- include "freelight-dao.labels" . | nindent 4 }}
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "backup-job") .) | nindent 4 }}
 spec:
   schedule: {{ .Values.freelightDAO_API.database.backup.schedule | quote }}
   jobTemplate:
@@ -32,11 +32,11 @@ spec:
                 value: {{ $databaseServer | quote }}
               - name: DATABASE_PORT
                 value: {{ .Values.freelightDAO_API.database.port | quote }}
-              - name: MYSQL_USER
+              - name: POSTGRES_USER
                 value: {{ .Values.freelightDAO_API.database.username | quote }}
-              - name: MYSQL_PASSWORD
+              - name: POSTGRES_PASSWORD
                 value: {{ .Values.freelightDAO_API.database.password | quote }}
-              - name: MYSQL_DATABASE
+              - name: POSTGRES_DB
                 value: {{ .Values.freelightDAO_API.database.schema | quote }}
               - name: BACKUP_TYPE
                 value: {{ .Values.freelightDAO_API.database.backup.type | quote }}

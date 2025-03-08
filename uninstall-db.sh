@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ENV=$1
-NAMESPACE=$ENV
+NAMESPACE=${2:-"$ENV"}
 
 if [ "$ENV" == "" ]; then
     echo "Please specify the environment: ./install-db.sh staging"
@@ -24,8 +24,8 @@ if [ "$KUBECONFIG_PATH" != "" ]; then
 fi
 
 # Install Database
-echo "Installing MariaDB $MARIADB_VERSION"
+echo "Installing Postgres $POSTGRES_VERSION"
 
-helm uninstall $KUBECONFIG_STR mariadb --namespace $NAMESPACE
+helm uninstall $KUBECONFIG_STR postgres --namespace $NAMESPACE
 
 echo "Finished installing Database..."

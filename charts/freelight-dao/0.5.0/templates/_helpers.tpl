@@ -46,7 +46,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Selector labels
 */}}
 {{- define "freelight-dao.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "freelight-dao.name" . }}
+app.kubernetes.io/name: {{ include "freelight-dao.name" . }}-{{ .SelectorName }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 

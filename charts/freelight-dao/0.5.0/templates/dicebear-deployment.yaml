@@ -1,16 +1,17 @@
+{{- if .Values.dicebear.deploy -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "freelight-dao.fullname" . }}-dicebear-deployment
   labels:
-    {{- include "freelight-dao.labels" . | nindent 4 }}
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "dicebear") .) | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "freelight-dao.selectorLabels" . | nindent 6 }}
+      {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "dicebear") .) | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,7 +19,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "freelight-dao.selectorLabels" . | nindent 8 }}
+        {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "dicebear") .) | nindent 8 }}
 	{{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -27,7 +28,7 @@ spec:
       imagePullSecrets:
         - name: {{ .Values.imageSettings.pullSecrets }}
       {{- end }}
-      serviceAccountName: {{ include "freelight-dao.serviceAccountName" . }}-dicebear
+      serviceAccountName: {{ include "freelight-dao.serviceAccountName" . }}-dicebear-sa
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -49,7 +50,7 @@ spec:
               path: /8.x/pixel-art/svg
               port: dicebear-api
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.dicebear.resources | nindent 12 }}
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
@@ -66,3 +67,4 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end -}}

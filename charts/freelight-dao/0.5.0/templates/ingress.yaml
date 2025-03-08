@@ -11,7 +11,7 @@ kind: Ingress
 metadata:
   name: {{ $fullName }}-frontend-ingress
   labels:
-    {{- include "freelight-dao.labels" . | nindent 4 }}
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "frontend") .) | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- if .Values.ingress.certManager.enabled }}
@@ -53,15 +53,15 @@ spec:
                 port:
                   number: 80
     {{- end }}
----
 {{- end }}
-{{- if .Values.freelightDAO_API.enabled -}}
+{{- if .Values.freelightDAO_API.enabled }}
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ $fullName }}-api-ingress
   labels:
-    {{- include "freelight-dao.labels" . | nindent 4 }}
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "api") .) | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- if .Values.ingress.certManager.enabled }}
@@ -99,17 +99,19 @@ spec:
             pathType: ImplementationSpecific
             backend:
               service:
-                name: {{ $fullName }}
+                name: {{ $fullName }}-api-service
                 port:
-                  number: 5000
+                  number: 5001
     {{- end }}
+{{- end }}
+{{- if .Values.dicebear.deploy }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ $fullName }}-dicebear-ingress
   labels:
-    {{- include "freelight-dao.labels" . | nindent 4 }}
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "dicebear") .) | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- if .Values.ingress.certManager.enabled }}
@@ -152,4 +154,4 @@ spec:
                   number: 3000
     {{- end }}
 {{- end }}
-{{- end -}}
+{{- end }}

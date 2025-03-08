@@ -33,6 +33,6 @@ fi
 
 echo "Installing chart $CHART for environment $ENV into namespace $NAMESPACE"
 
-helm install $KUBECONFIG_STR $CHART ./charts/$CHART/$VERSION/ \
+helm upgrade $KUBECONFIG_STR --install $CHART ./charts/$CHART/$VERSION/ \
     --namespace $NAMESPACE --create-namespace \
     --values ./env.$ENV/$CHART/custom-values.yaml
