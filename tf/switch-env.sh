@@ -9,7 +9,7 @@ if [ "$ENV" == "" ]; then
 fi
 
 if [ "$PROVIDER" == "" ]; then
-    echo "Please specify a provider: aws,gcp"
+    echo "Please specify a provider: aws,gcp,ubicloud"
     exit 1
 fi
 

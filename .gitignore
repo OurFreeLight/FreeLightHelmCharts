@@ -13,6 +13,9 @@ custom-values.yaml
 
 env.*/
 
+temp.yaml
+temp.yml
+
 .terraform/
 dist/
 

@@ -243,12 +243,32 @@ spec:
             - name: GCP_KEY_FILEPATH
               value: "/app/gcp.json"
             {{- end }}
+            {{- if .Values.freelightDAO_API.openTelemetry.azure.connectionString }}
+            - name: AZURE_APPINSIGHTS_CONNECTION_STRING
+              value: "{{ .Values.freelightDAO_API.openTelemetry.azure.connectionString }}"
+            {{- end }}
             - name: FILE_STORAGE_LOCATION
               value: {{ .Values.freelightDAO_API.fileStorage.location | quote }}
+            {{- if eq .Values.freelightDAO_API.fileStorage.location "s3" }}
+            - name: FILE_AWS_REGION
+              value: {{ .Values.freelightDAO_API.aws.s3.region | quote }}
+            - name: FILE_AWS_ACCESS_KEY_ID
+              value: {{ .Values.freelightDAO_API.aws.s3.accessKey | quote }}
+            - name: FILE_AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.freelightDAO_API.aws.s3.secretKey | quote }}
+            - name: FILE_AWS_S3_BUCKET
+              value: {{ .Values.freelightDAO_API.aws.s3.bucket | quote }}
+            - name: FILE_AWS_ENC_S3_BUCKET
+              value: {{ .Values.freelightDAO_API.aws.s3.encryptedBucket | quote }}
+            {{- end }}
             - name: SEED_ISSUE_STATUSES
               value: '[{ "name": "Draft", "description": "The issue is not ready to be done, this needs to be thought out more and refined." }, { "name": "To Do", "description": "The issue is ready to be done." }, { "name": "In Progress", "description": "The issue is in progress." }, { "name": "Ready for Review", "description": "The issue has work completed and is ready to be reviewed." }, { "name": "Done", "description": "The issue is complete." }, { "name": "Rejected", "description": "The issue was rejected." }]'
             - name: SEED_USERS
               value: "[{ \"userType\": \"admin\", \"firstName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.firstName }}\", \"lastName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.lastName }}\", \"displayName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.displayName }}\", \"email\": \"{{ .Values.freelightDAO_API.defaultAdminUser.email }}\", \"password\": \"{{ .Values.freelightDAO_API.defaultAdminUser.password }}\", \"verified\": true }]"
+            - name: MEMBERSHIP_BENEFITS
+              value: {{ ternary "1" "0" .Values.freelightDAO_API.settings.membershipBenefits | quote }}
+            - name: ANYONE_CAN_SIGN_AGREEMENTS
+              value: {{ ternary "1" "0" .Values.freelightDAO_API.settings.anyoneCanSignAgreements | quote }}
           resources:
             {{- toYaml .Values.freelightDAO_API.apiResources | nindent 12 }}
           volumeMounts:
