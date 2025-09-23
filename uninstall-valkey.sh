@@ -4,7 +4,7 @@ ENV=$1
 NAMESPACE=${2:-"$ENV"}
 
 if [ "$ENV" == "" ]; then
-    echo "Please specify the environment: ./install-db.sh staging"
+    echo "Please specify the environment: ./install-valkey.sh staging"
 
     exit 1
 fi
@@ -23,9 +23,9 @@ if [ "$KUBECONFIG_PATH" != "" ]; then
   KUBECONFIG_STR="--kubeconfig $KUBECONFIG_PATH"
 fi
 
-# Install Database
-echo "Uninstalling Postgres $POSTGRES_VERSION"
+# Install Valkey
+echo "Uninstalling Valkey $VALKEY_VERSION"
 
-helm uninstall $KUBECONFIG_STR postgres --namespace $NAMESPACE
+helm $KUBECONFIG_STR uninstall valkey --namespace $NAMESPACE
 
-echo "Finished uninstalling Postgres..."
+echo "Finished uninstalling Valkey..."

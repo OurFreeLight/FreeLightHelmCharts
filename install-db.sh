@@ -26,6 +26,7 @@ fi
 # Setup Database
 echo "Setting up Postgres..."
 helm repo add bitnami https://charts.bitnami.com/bitnami
+helm update
 
 # Install Database
 echo "Installing Postgres $POSTGRES_VERSION"

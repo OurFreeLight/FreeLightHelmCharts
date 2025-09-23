@@ -34,13 +34,3 @@ helm upgrade $KUBECONFIG_STR --install \
   --create-namespace --set controller.watchIngressWithoutClass=true
 
 echo "Finished installing nginx ingress"
-
-echo "Installing jetstack cert-manager $CERT_MANAGER_VERSION"
-kubectl $KUBECONFIG_STR apply -f https://github.com/jetstack/cert-manager/releases/download/v$CERT_MANAGER_VERSION/cert-manager.crds.yaml
-helm repo add jetstack https://charts.jetstack.io
-helm repo update
-helm install $KUBECONFIG_STR cert-manager jetstack/cert-manager \
-  --namespace cert-manager \
-  --create-namespace \
-  --version v$CERT_MANAGER_VERSION
-echo "Finished installing jetstack cert-manager..."

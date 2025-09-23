@@ -24,8 +24,8 @@ if [ "$KUBECONFIG_PATH" != "" ]; then
 fi
 
 # Install Garnet
-echo "UnInstalling Garnet $GARNET_VERSION"
+echo "Uninstalling Garnet $GARNET_VERSION"
 
 helm uninstall $KUBECONFIG_STR garnet --namespace $NAMESPACE
 
-echo "Finished uninstalling rancher..."
+echo "Finished uninstalling Garnet..."

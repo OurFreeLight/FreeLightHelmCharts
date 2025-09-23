@@ -26,8 +26,11 @@ fi
 # Install Garnet
 echo "Installing Garnet $GARNET_VERSION"
 
-helm install $KUBECONFIG_STR garnet ./charts/garnet/$GARNET_VERSION/ \
-    --namespace $NAMESPACE --create-namespace \
-    --set cluster.enabled=false
+# helm install $KUBECONFIG_STR garnet ./charts/garnet/$GARNET_VERSION/ \
+#     --namespace $NAMESPACE --create-namespace \
+#     --set cluster.enabled=false
+
+helm $KUBECONFIG_STR upgrade --install garnet oci://ghcr.io/microsoft/helm-charts/garnet --version=$GARNET_VERSION \
+    --namespace $NAMESPACE --create-namespace
 
 echo "Finished installing Garnet..."
