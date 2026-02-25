@@ -10,7 +10,9 @@ imageSettings:
 
 freelightDAO_frontend:
   enabled: true
+  useConfigMap: true
   image: ourfreelight/freelight-dao-frontend:0.5.4-staging
+  environment: staging
   ingress:
     hosts:
       - host: staging.freelight.org
@@ -113,12 +115,16 @@ freelightDAO_API:
     port: 6379
     tls: false
     tlsInsecure: false
+    username: 
+    password: 
     cluster: false
   garnetPubSub:
     server: localhost
     port: 6379
     tls: false
     tlsInsecure: false
+    username: 
+    password: 
   apiResources: {}
     # limits:
     #   cpu: 100m
@@ -144,6 +150,11 @@ database:
   schema: freelight_dao
   username: awuiyh34ygsd
   password: 3ui45hiyuawer
+
+botBlocker:
+  enabled: false
+  url: "http://localhost:8080"
+  authToken: "4xdtrgw34a34"
 
 garnet:
   deploy: true

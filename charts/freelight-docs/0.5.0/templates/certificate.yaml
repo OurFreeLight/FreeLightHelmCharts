@@ -7,7 +7,12 @@ metadata:
 spec:
   secretName: {{ $fullName }}-docs-tls
   issuerRef:
+  {{- if not .Values.ingress.certManager.clusterIssuer }}
+    kind: ClusterIssuer
+    name: {{ .Values.ingress.certManager.clusterIssuer | quote }}
+  {{- else }}
     name: {{ $fullName }}-docs-issuer
+  {{- end }}
   dnsNames:
   {{- range .Values.ingress.hosts }}
     - {{ .host | quote }}

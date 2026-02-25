@@ -1,4 +1,5 @@
 {{- if .Values.ingress.certManager.enabled }}
+{{- if .Values.ingress.certManager.useHttp01 }}
 {{- $fullName := include "freelight-landing.fullname" . }}
 apiVersion: cert-manager.io/v1
 kind: Issuer
@@ -15,4 +16,5 @@ spec:
       http01:
         ingress:
           class: {{ .Values.ingress.className }}
+{{- end -}}
 {{- end -}}

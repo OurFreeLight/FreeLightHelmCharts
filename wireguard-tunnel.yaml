@@ -1,0 +1,57 @@
+spec:
+  template:
+    spec:
+      volumes:
+        - name: dev-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+
+        - name: wg-conf
+          secret:
+            secretName: homelab-wg-conf
+            items:
+              - key: wg0.conf
+                path: wg0.conf
+
+        - name: gluetun-post-rules
+          configMap:
+            name: gluetun-iptables-post-rules
+            items:
+              - key: post-rules.txt
+                path: post-rules.txt
+
+      # Native sidecar: initContainer with restartPolicy: Always
+      initContainers:
+        - name: vpn
+          image: qmcgaw/gluetun:v3.41.0
+          restartPolicy: Always
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            allowPrivilegeEscalation: false
+          env:
+            - name: FIREWALL
+              value: "on"
+            - name: VPN_SERVICE_PROVIDER
+              value: custom
+            - name: VPN_TYPE
+              value: wireguard
+            - name: DNS_ADDRESS
+              value: "10.7.0.1"
+            - name: FIREWALL_OUTBOUND_SUBNETS
+              value: "XXX"
+            - name: WIREGUARD_ALLOWED_IPS
+              value: "XXX"
+          volumeMounts:
+            - name: dev-tun
+              mountPath: /dev/net/tun
+            - name: wg-conf
+              mountPath: /gluetun/wireguard/wg0.conf
+              subPath: wg0.conf
+              readOnly: true
+            - name: gluetun-post-rules
+              mountPath: /iptables/post-rules.txt
+              subPath: post-rules.txt
+              readOnly: true

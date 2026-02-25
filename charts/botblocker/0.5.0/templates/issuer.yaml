@@ -1,16 +1,16 @@
 {{- if .Values.ingress.certManager.enabled }}
 {{- if .Values.ingress.certManager.useHttp01 }}
-{{- $fullName := include "freelight-docs.fullname" . }}
+{{- $fullName := include "botblocker.fullname" . }}
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ $fullName }}-docs-issuer
+  name: {{ $fullName }}-landing-issuer
 spec:
   acme:
     email: {{ .Values.ingress.certManager.email }}
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
-      name: {{ $fullName }}-docs-private-key
+      name: {{ $fullName }}-landing-private-key
     solvers:
     - selector: {}
       http01:

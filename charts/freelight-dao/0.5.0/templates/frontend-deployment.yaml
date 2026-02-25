@@ -37,6 +37,9 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.freelightDAO_frontend.image }}"
           imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
+          env: 
+            - name: ENVIRONMENT
+              value: {{ .Values.freelightDAO_frontend.environment | quote }}
           ports:
             - name: frontend-http
               containerPort: 80
@@ -51,6 +54,7 @@ spec:
               port: frontend-http
           resources:
             {{- toYaml .Values.freelightDAO_API.frontendResources | nindent 12 }}
+      {{- if .Values.freelightDAO_frontend.useConfigMap }}
           volumeMounts:
             - name: frontend-config
               mountPath: /usr/share/nginx/html/config.json
@@ -63,6 +67,7 @@ spec:
             items:
               - key: config.json
                 path: config.json
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

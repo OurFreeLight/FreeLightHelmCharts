@@ -63,7 +63,7 @@ spec:
         - name: freelight-dao-init
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: busybox:1.36
+          image: busybox:1.37
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
           args:
@@ -73,7 +73,6 @@ spec:
                 sleep 1
               done
               echo "Database ready"
-              
 {{- if $databaseReadServer }}
               echo "Waiting for read database to be ready at {{ $databaseReadServer }}:{{ .Values.freelightDAO_API.databaseRead.port }}"
               while ! nc -z {{ $databaseReadServer }} {{ .Values.freelightDAO_API.databaseRead.port }}; do
@@ -81,7 +80,6 @@ spec:
               done
               echo "Read Database ready"
 {{- end -}}
-              
               echo "Waiting for Garnet to be ready at {{ $garnetServer }}:{{ .Values.freelightDAO_API.garnet.port }}"
               while ! nc -z {{ $garnetServer }} {{ .Values.freelightDAO_API.garnet.port }}; do
                 sleep 1
@@ -215,12 +213,26 @@ spec:
             - name: RATE_LIMITER_REDIS_PASSWORD
               value: "{{ .Values.freelightDAO_API.ratelimiter.redis.password }}"
             {{- end }}
+            {{- if .Values.botBlocker.enabled }}
+            - name: BOTBLOCKER_URL
+              value: {{ .Values.botBlocker.url | quote }}
+            - name: BOTBLOCKER_AUTH_TOKEN
+              value: {{ .Values.botBlocker.authToken | quote }}
+            {{- end }}
             - name: GARNET_URL
               value: {{ $garnetUrl | quote }}
             - name: GARNET_TLS
               value: "{{ ternary "1" "0" .Values.freelightDAO_API.garnet.tls }}"
             - name: GARNET_TLS_INSECURE
               value: "{{ ternary "1" "0" .Values.freelightDAO_API.garnet.tlsInsecure }}"
+            {{- if .Values.freelightDAO_API.garnet.username }}
+            - name: GARNET_USERNAME
+              value: "{{ .Values.freelightDAO_API.garnet.username }}"
+            {{- end }}
+            {{- if .Values.freelightDAO_API.garnet.password }}
+            - name: GARNET_PASSWORD
+              value: "{{ .Values.freelightDAO_API.garnet.password }}"
+            {{- end }}
             - name: GARNET_CLUSTER
               value: "{{ ternary "1" "0" .Values.freelightDAO_API.garnet.cluster }}"
             - name: GARNET_PUBSUB_URL
@@ -229,6 +241,14 @@ spec:
               value: "{{ ternary "1" "0" .Values.freelightDAO_API.garnetPubSub.tls }}"
             - name: GARNET_PUBSUB_TLS_INSECURE
               value: "{{ ternary "1" "0" .Values.freelightDAO_API.garnetPubSub.tlsInsecure }}"
+            {{- if .Values.freelightDAO_API.garnetPubSub.username }}
+            - name: GARNET_PUBSUB_USERNAME
+              value: "{{ .Values.freelightDAO_API.garnetPubSub.username }}"
+            {{- end }}
+            {{- if .Values.freelightDAO_API.garnetPubSub.password }}
+            - name: GARNET_PUBSUB_PASSWORD
+              value: "{{ .Values.freelightDAO_API.garnetPubSub.password }}"
+            {{- end }}
             - name: TESTS_PASSWORD
               value: "{{ .Values.freelightDAO_API.testsPassword }}"
             - name: OTEL_EXPORTER_TYPE
