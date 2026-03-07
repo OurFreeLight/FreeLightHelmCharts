@@ -1,32 +1,16 @@
-# Default values for botblocker.
+# Default values for freelight-landing.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 image:
-  repository: ourfreelight/botblocker_server:0.1.0
+  repository: ourfreelight/landing-page:0.5.0
   pullPolicy: Always
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-
-authToken: "987qh4t97q34ht78q234h"
-numHashers: "0"
-
-database:
-  server: localhost
-  port: 5432
-  username: awuiyh34ygsd
-  password: 3ui45hiyuawer
-  schema: freelight_dao
-  ssl:
-    enabled: false
-    rejectUnauthorized: true
-    ca: 
-    key: 
-    cert: 
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -57,22 +41,21 @@ service:
   type: ClusterIP
   port: 80
 
-ingress:
+httpRoute:
   enabled: true
-  className: ""
-  annotations: {}
-  certManager:
-    enabled: true
-    email: admin@freelight.org
-    solver: "http01"
-    dns01: {}
-  hosts:
-    - host: www.freelight.org
-    - host: freelight.org
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+  gateway:
+    name: ""
+    namespace: ""
+  hostnames:
+    - www.freelight.org
+    - freelight.org
+
+certManager:
+  enabled: true
+  email: admin@freelight.org
+  clusterIssuer: ""
+  solver: "http01"
+  dns01: {}
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -85,6 +68,15 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
 
 autoscaling:
   enabled: false

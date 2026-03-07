@@ -57,22 +57,21 @@ service:
   type: ClusterIP
   port: 80
 
-ingress:
+httpRoute:
   enabled: true
-  className: ""
-  annotations: {}
-  certManager:
-    enabled: true
-    email: admin@freelight.org
-    solver: "http01"
-    dns01: {}
-  hosts:
-    - host: www.freelight.org
-    - host: freelight.org
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+  gateway:
+    name: ""
+    namespace: ""
+  hostnames:
+    - www.freelight.org
+    - freelight.org
+
+certManager:
+  enabled: true
+  email: admin@freelight.org
+  clusterIssuer: ""
+  solver: "http01"
+  dns01: {}
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

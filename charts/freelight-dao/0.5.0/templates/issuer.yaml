@@ -1,4 +1,5 @@
 {{- if .Values.ingress.certManager.enabled }}
+{{- if not .Values.ingress.certManager.clusterIssuer }}
 {{- $fullName := include "freelight-dao.fullname" . -}}
 {{- if .Values.freelightDAO_frontend.enabled -}}
 apiVersion: cert-manager.io/v1
@@ -13,9 +14,14 @@ spec:
       name: {{ $fullName }}-frontend-private-key
     solvers:
     - selector: {}
+      {{- if eq .Values.ingress.certManager.solver "dns01" }}
+      dns01:
+        {{- toYaml .Values.ingress.certManager.dns01 | nindent 8 }}
+      {{- else }}
       http01:
         ingress:
           class: {{ .Values.ingress.className }}
+      {{- end }}
 ---
 {{- end -}}
 {{- if .Values.freelightDAO_API.enabled -}}
@@ -31,9 +37,14 @@ spec:
       name: {{ $fullName }}-private-key
     solvers:
     - selector: {}
+      {{- if eq .Values.ingress.certManager.solver "dns01" }}
+      dns01:
+        {{- toYaml .Values.ingress.certManager.dns01 | nindent 8 }}
+      {{- else }}
       http01:
         ingress:
           class: {{ .Values.ingress.className }}
+      {{- end }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
@@ -47,8 +58,14 @@ spec:
       name: {{ $fullName }}-dicebear-private-key
     solvers:
     - selector: {}
+      {{- if eq .Values.ingress.certManager.solver "dns01" }}
+      dns01:
+        {{- toYaml .Values.ingress.certManager.dns01 | nindent 8 }}
+      {{- else }}
       http01:
         ingress:
           class: {{ .Values.ingress.className }}
+      {{- end }}
 {{- end }}
+{{- end -}}
 {{- end -}}

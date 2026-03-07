@@ -13,13 +13,18 @@ freelightDAO_frontend:
   useConfigMap: true
   image: ourfreelight/freelight-dao-frontend:0.5.4-staging
   environment: staging
-  ingress:
-    hosts:
-      - host: staging.freelight.org
+  title: "FreeLight DAO"
+  recaptchaSiteKey: ""
+  httpRoute:
+    hostnames:
+      - staging.freelight.org
 
 freelightDAO_API:
   enabled: true
   image: ourfreelight/freelight-dao-api:0.5.4-staging
+  httpRoute:
+    hostnames:
+      - api.freelight.org
   logLevel: verbose
   nodeStartArgs: ""
   hotStartArgs: ""
@@ -174,9 +179,9 @@ dicebear:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
-  ingress:
-    hosts:
-      - host: dicebear.freelight.org
+  httpRoute:
+    hostnames:
+      - dicebear.freelight.org
 
 nameOverride: ""
 fullnameOverride: ""
@@ -206,21 +211,21 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-ingress:
+httpRoute:
+  gateway:
+    name: ""
+    namespace: ""
+    create: false
+    className: "eg"
+    tls:
+      certificateRefs: []
+
+certManager:
   enabled: true
-  className: "nginx"
-  annotations: {}
-  certManager:
-    enabled: true
-    email: admin@freelight.org
-    solver: "http01"
-    dns01: {}
-  hosts:
-    - host: api.freelight.org
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+  email: admin@freelight.org
+  clusterIssuer: ""
+  solver: "http01"
+  dns01: {}
 
 autoscaling:
   enabled: false

@@ -1,5 +1,5 @@
 {{- if .Values.ingress.certManager.enabled }}
-{{- if .Values.ingress.certManager.useHttp01 }}
+{{- if not .Values.ingress.certManager.clusterIssuer }}
 {{- $fullName := include "freelight-docs.fullname" . }}
 apiVersion: cert-manager.io/v1
 kind: Issuer
@@ -13,8 +13,13 @@ spec:
       name: {{ $fullName }}-docs-private-key
     solvers:
     - selector: {}
+      {{- if eq .Values.ingress.certManager.solver "dns01" }}
+      dns01:
+        {{- toYaml .Values.ingress.certManager.dns01 | nindent 8 }}
+      {{- else }}
       http01:
         ingress:
           class: {{ .Values.ingress.className }}
+      {{- end }}
 {{- end -}}
 {{- end -}}

@@ -41,9 +41,9 @@ spec:
             - name: DNS_ADDRESS
               value: "10.7.0.1"
             - name: FIREWALL_OUTBOUND_SUBNETS
-              value: "XXX"
+              value: "10.108.0.0/16,10.109.0.0/16,108.81.104.152/32"
             - name: WIREGUARD_ALLOWED_IPS
-              value: "XXX"
+              value: "10.7.0.1/32,192.168.0.179/32,192.168.0.181/32,192.168.0.183/32,192.168.0.97/32"
           volumeMounts:
             - name: dev-tun
               mountPath: /dev/net/tun

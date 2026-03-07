@@ -45,9 +45,11 @@ ingress:
   enabled: true
   className: ""
   annotations: {}
-  certManager: 
+  certManager:
     enabled: true
     email: admin@freelight.org
+    solver: "http01"
+    dns01: {}
   hosts:
     - host: www.freelight.org
     - host: freelight.org
