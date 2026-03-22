@@ -37,6 +37,10 @@ freelightDAO_API:
   settings: 
     membershipBenefits: true
     anyoneCanSignAgreements: false
+  mcp:
+    enabled: false
+    route: "/mcp"
+  extraEnv: []
   fileStorage:
     location: local
   data:

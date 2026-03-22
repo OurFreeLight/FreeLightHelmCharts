@@ -289,6 +289,13 @@ spec:
               value: {{ ternary "1" "0" .Values.freelightDAO_API.settings.membershipBenefits | quote }}
             - name: ANYONE_CAN_SIGN_AGREEMENTS
               value: {{ ternary "1" "0" .Values.freelightDAO_API.settings.anyoneCanSignAgreements | quote }}
+            - name: MCP_SERVER
+              value: {{ ternary "1" "0" .Values.freelightDAO_API.mcp.enabled | quote }}
+            - name: MCP_ROUTE
+              value: {{ .Values.freelightDAO_API.mcp.route | quote }}
+            {{- with .Values.freelightDAO_API.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           resources:
             {{- toYaml .Values.freelightDAO_API.apiResources | nindent 12 }}
           volumeMounts:
