@@ -11,9 +11,5 @@ spec:
       targetPort: web
       protocol: TCP
       name: web
-    - port: 5011
-      targetPort: api
-      protocol: TCP
-      name: api
   selector:
     {{- include "freelight.selectorLabels" . | nindent 4 }}
