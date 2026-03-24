@@ -1,0 +1,20 @@
+{{- if .Values.certManager.enabled }}
+{{- $fullName := include "freelight-landing.fullname" . }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $fullName }}-certificate
+spec:
+  secretName: {{ $fullName }}-tls
+  issuerRef:
+    {{- if .Values.certManager.clusterIssuer }}
+    kind: ClusterIssuer
+    name: {{ .Values.certManager.clusterIssuer | quote }}
+    {{- else }}
+    name: {{ $fullName }}-issuer
+    {{- end }}
+  dnsNames:
+  {{- range .Values.httpRoute.hostnames }}
+    - {{ . | quote }}
+  {{- end }}
+{{- end -}}

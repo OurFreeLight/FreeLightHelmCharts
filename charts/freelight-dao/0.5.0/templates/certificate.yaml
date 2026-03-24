@@ -1,5 +1,21 @@
 {{- if .Values.ingress.certManager.enabled }}
 {{- $fullName := include "freelight-dao.fullname" . -}}
+{{- if .Values.freelightDAO_frontend.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $fullName }}-frontend-certificate
+spec:
+  secretName: {{ $fullName }}-frontend-tls
+  issuerRef:
+    name: {{ $fullName }}-frontend-issuer
+  dnsNames:
+  {{- range .Values.freelightDAO_frontend.ingress.hosts }}
+    - {{ .host | quote }}
+  {{- end }}
+---
+{{- end -}}
+{{- if .Values.freelightDAO_API.enabled -}}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -12,4 +28,18 @@ spec:
   {{- range .Values.ingress.hosts }}
     - {{ .host | quote }}
   {{- end }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $fullName }}-dicebear-certificate
+spec:
+  secretName: {{ $fullName }}-dicebear-tls
+  issuerRef:
+    name: {{ $fullName }}-dicebear-issuer
+  dnsNames:
+  {{- range .Values.dicebear.ingress.hosts }}
+    - {{ .host | quote }}
+  {{- end }}
 {{- end }}
+{{- end -}}

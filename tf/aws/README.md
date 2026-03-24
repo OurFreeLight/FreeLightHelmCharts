@@ -20,7 +20,7 @@ NOTE: This will have to be corrected in the future as it's not ideal to give the
 Now, setup the AWS CLI with the user credentials, then create a `custom.tfvars` file in this directory with the following variables set:
 ```terraform
 domain                          = "staging.freelight.org"
-k8s_version                     = "1.26"
+k8s_version                     = "1.29"
 frontend_deployment_type        = "cloudfront"
 backend_deployment_type         = "eks"
 aws_eks_cluster_iam_role_arn    = "<EKS_CLUSTER_ARN>"

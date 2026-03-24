@@ -1,0 +1,78 @@
+{{- $fullName := include "freelight-dao.fullname" . -}}
+{{- if .Values.freelightDAO_frontend.enabled -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $fullName }}-frontend
+  labels:
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "frontend") .) | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.httpRoute.gateway.name }}
+      {{- if .Values.httpRoute.gateway.namespace }}
+      namespace: {{ .Values.httpRoute.gateway.namespace }}
+      {{- end }}
+      {{- if .Values.httpRoute.gateway.tls.certificateRefs }}
+      sectionName: https
+      {{- end }}
+  hostnames:
+    {{- range .Values.freelightDAO_frontend.httpRoute.hostnames }}
+    - {{ . | quote }}
+    {{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ $fullName }}-frontend-service
+          port: 80
+{{- end }}
+{{- if .Values.freelightDAO_API.enabled }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $fullName }}-api
+  labels:
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "api") .) | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.httpRoute.gateway.name }}
+      {{- if .Values.httpRoute.gateway.namespace }}
+      namespace: {{ .Values.httpRoute.gateway.namespace }}
+      {{- end }}
+      {{- if .Values.httpRoute.gateway.tls.certificateRefs }}
+      sectionName: https
+      {{- end }}
+  hostnames:
+    {{- range .Values.freelightDAO_API.httpRoute.hostnames }}
+    - {{ . | quote }}
+    {{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ $fullName }}-api-service
+          port: 5001
+{{- end }}
+{{- if .Values.dicebear.deploy }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $fullName }}-dicebear
+  labels:
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "dicebear") .) | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.httpRoute.gateway.name }}
+      {{- if .Values.httpRoute.gateway.namespace }}
+      namespace: {{ .Values.httpRoute.gateway.namespace }}
+      {{- end }}
+      {{- if .Values.httpRoute.gateway.tls.certificateRefs }}
+      sectionName: https
+      {{- end }}
+  hostnames:
+    {{- range .Values.dicebear.httpRoute.hostnames }}
+    - {{ . | quote }}
+    {{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ $fullName }}-dicebear-service
+          port: 3000
+{{- end }}

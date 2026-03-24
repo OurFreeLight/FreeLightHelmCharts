@@ -1,10 +1,47 @@
-{{- if .Values.database.deploy -}}
+{{- if .Values.freelightDAO_frontend.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "freelight-dao.fullname" . }}-frontend-service
+  labels:
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "frontend") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: frontend-http
+      protocol: TCP
+      name: frontend-http
+  selector:
+    {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "frontend") .) | nindent 4 }}
+{{- end }}
+{{- if .Values.freelightDAO_API.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "freelight-dao.fullname" . }}-api-service
+  labels:
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "api") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5001
+      targetPort: api
+      protocol: TCP
+      name: api
+  selector:
+    {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "api") .) | nindent 4 }}
+{{- end }}
+{{- if .Values.database.deploy }}
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "freelight-dao.fullname" . }}-db-service
   labels:
-    {{- include "freelight-dao.labels" . | nindent 4 }}
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "db") .) | nindent 4 }}
 spec:
   type: ClusterIP
   ports:
@@ -13,21 +50,60 @@ spec:
       protocol: TCP
       name: database
   selector:
-    {{- include "freelight-dao.selectorLabels" . | nindent 4 }}
+    {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "db") .) | nindent 4 }}
+{{- end }}
+{{- if .Values.garnet.deploy }}
 ---
-{{- end -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "freelight-dao.fullname" . }}
+  name: {{ include "freelight-dao.fullname" . }}-garnet-service
   labels:
-    {{- include "freelight-dao.labels" . | nindent 4 }}
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "garnet") .) | nindent 4 }}
 spec:
   type: ClusterIP
   ports:
-    - port: 5000
-      targetPort: api
+    - port: 6379
+      targetPort: garnet
       protocol: TCP
-      name: api
+      name: garnet
   selector:
-    {{- include "freelight-dao.selectorLabels" . | nindent 4 }}
+    {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "garnet") .) | nindent 4 }}
+{{- end }}
+{{- if .Values.garnetPubSub.deploy }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "freelight-dao.fullname" . }}-garnet-pubsub-service
+  labels:
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "garnet-pubsub") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: garnet-pubsub
+      protocol: TCP
+      name: garnet-pubsub
+  selector:
+    {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "garnet-pubsub") .) | nindent 4 }}
+{{- end }}
+{{- if .Values.dicebear.deploy }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "freelight-dao.fullname" . }}-dicebear-service
+  labels:
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "dicebear") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: dicebear-api
+      protocol: TCP
+      name: dicebear-api
+  selector:
+    {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "dicebear") .) | nindent 4 }}
+{{- end -}}
+
