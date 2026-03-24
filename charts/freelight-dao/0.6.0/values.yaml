@@ -40,6 +40,12 @@ freelightDAO_API:
   mcp:
     enabled: false
     route: "/mcp"
+  emailHashing:
+    # When enabled, emails are stored as HMAC-SHA256 hashes in the database.
+    # WARNING: Once enabled on an existing database, all existing plaintext email
+    # rows must be migrated before login will work for those users.
+    enabled: false
+    secret: ""
   extraEnv: []
   fileStorage:
     location: local

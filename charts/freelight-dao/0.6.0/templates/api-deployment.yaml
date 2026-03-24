@@ -293,6 +293,12 @@ spec:
               value: {{ ternary "1" "0" .Values.freelightDAO_API.mcp.enabled | quote }}
             - name: MCP_ROUTE
               value: {{ .Values.freelightDAO_API.mcp.route | quote }}
+            - name: EMAIL_HASHING_ENABLED
+              value: {{ ternary "1" "0" .Values.freelightDAO_API.emailHashing.enabled | quote }}
+            {{- if .Values.freelightDAO_API.emailHashing.enabled }}
+            - name: EMAIL_HASH_SECRET
+              value: {{ .Values.freelightDAO_API.emailHashing.secret | quote }}
+            {{- end }}
             {{- with .Values.freelightDAO_API.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
