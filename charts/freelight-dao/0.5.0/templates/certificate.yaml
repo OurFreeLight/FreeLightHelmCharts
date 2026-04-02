@@ -1,4 +1,4 @@
-{{- if .Values.ingress.certManager.enabled }}
+{{- if .Values.certManager.enabled }}
 {{- $fullName := include "freelight-dao.fullname" . -}}
 {{- if .Values.freelightDAO_frontend.enabled -}}
 apiVersion: cert-manager.io/v1
@@ -8,10 +8,15 @@ metadata:
 spec:
   secretName: {{ $fullName }}-frontend-tls
   issuerRef:
+    {{- if .Values.certManager.clusterIssuer }}
+    kind: ClusterIssuer
+    name: {{ .Values.certManager.clusterIssuer }}
+    {{- else }}
     name: {{ $fullName }}-frontend-issuer
+    {{- end }}
   dnsNames:
-  {{- range .Values.freelightDAO_frontend.ingress.hosts }}
-    - {{ .host | quote }}
+  {{- range .Values.freelightDAO_frontend.httpRoute.hostnames }}
+    - {{ . | quote }}
   {{- end }}
 ---
 {{- end -}}
@@ -23,10 +28,15 @@ metadata:
 spec:
   secretName: {{ $fullName }}-tls
   issuerRef:
+    {{- if .Values.certManager.clusterIssuer }}
+    kind: ClusterIssuer
+    name: {{ .Values.certManager.clusterIssuer }}
+    {{- else }}
     name: {{ $fullName }}-issuer
+    {{- end }}
   dnsNames:
-  {{- range .Values.ingress.hosts }}
-    - {{ .host | quote }}
+  {{- range .Values.freelightDAO_API.httpRoute.hostnames }}
+    - {{ . | quote }}
   {{- end }}
 ---
 apiVersion: cert-manager.io/v1
@@ -36,10 +46,15 @@ metadata:
 spec:
   secretName: {{ $fullName }}-dicebear-tls
   issuerRef:
+    {{- if .Values.certManager.clusterIssuer }}
+    kind: ClusterIssuer
+    name: {{ .Values.certManager.clusterIssuer }}
+    {{- else }}
     name: {{ $fullName }}-dicebear-issuer
+    {{- end }}
   dnsNames:
-  {{- range .Values.dicebear.ingress.hosts }}
-    - {{ .host | quote }}
+  {{- range .Values.dicebear.httpRoute.hostnames }}
+    - {{ . | quote }}
   {{- end }}
 {{- end }}
 {{- end -}}
