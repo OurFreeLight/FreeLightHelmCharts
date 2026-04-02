@@ -1,5 +1,5 @@
-{{- if .Values.ingress.certManager.enabled }}
-{{- if not .Values.ingress.certManager.clusterIssuer }}
+{{- if .Values.certManager.enabled }}
+{{- if not .Values.certManager.clusterIssuer }}
 {{- $fullName := include "freelight-dao.fullname" . -}}
 {{- if .Values.freelightDAO_frontend.enabled -}}
 apiVersion: cert-manager.io/v1
@@ -8,15 +8,15 @@ metadata:
   name: {{ $fullName }}-frontend-issuer
 spec:
   acme:
-    email: {{ .Values.ingress.certManager.email }}
+    email: {{ .Values.certManager.email }}
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: {{ $fullName }}-frontend-private-key
     solvers:
     - selector: {}
-      {{- if eq .Values.ingress.certManager.solver "dns01" }}
+      {{- if eq .Values.certManager.solver "dns01" }}
       dns01:
-        {{- toYaml .Values.ingress.certManager.dns01 | nindent 8 }}
+        {{- toYaml .Values.certManager.dns01 | nindent 8 }}
       {{- else }}
       http01:
         ingress:
@@ -31,15 +31,15 @@ metadata:
   name: {{ $fullName }}-issuer
 spec:
   acme:
-    email: {{ .Values.ingress.certManager.email }}
+    email: {{ .Values.certManager.email }}
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: {{ $fullName }}-private-key
     solvers:
     - selector: {}
-      {{- if eq .Values.ingress.certManager.solver "dns01" }}
+      {{- if eq .Values.certManager.solver "dns01" }}
       dns01:
-        {{- toYaml .Values.ingress.certManager.dns01 | nindent 8 }}
+        {{- toYaml .Values.certManager.dns01 | nindent 8 }}
       {{- else }}
       http01:
         ingress:
@@ -52,15 +52,15 @@ metadata:
   name: {{ $fullName }}-dicebear-issuer
 spec:
   acme:
-    email: {{ .Values.ingress.certManager.email }}
+    email: {{ .Values.certManager.email }}
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: {{ $fullName }}-dicebear-private-key
     solvers:
     - selector: {}
-      {{- if eq .Values.ingress.certManager.solver "dns01" }}
+      {{- if eq .Values.certManager.solver "dns01" }}
       dns01:
-        {{- toYaml .Values.ingress.certManager.dns01 | nindent 8 }}
+        {{- toYaml .Values.certManager.dns01 | nindent 8 }}
       {{- else }}
       http01:
         ingress:
