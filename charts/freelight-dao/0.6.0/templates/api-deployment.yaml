@@ -27,6 +27,9 @@
 {{- if .Values.freelightDAO_API.swaggerUIEnabled -}}
 {{- $hotStartArgs = printf "%s --swagger-ui build-web/freelight_daoWeb_AppAPI_openapi-3.0.0-yaml.yaml" $hotStartArgs | trim -}}
 {{- end -}}
+{{- if .Values.freelightDAO_API.mcpEnabled -}}
+{{- $hotStartArgs = printf "%s --mcp" $hotStartArgs | trim -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -141,6 +144,10 @@ spec:
               value: {{ $nodeStartArgs | quote }}
             - name: HOT_RUN_ARGS
               value: {{ $hotStartArgs | quote }}
+            - name: MCP_SERVER
+              value: {{ if .Values.freelightDAO_API.mcpEnabled }}"1"{{ else }}"0"{{ end }}
+            - name: MCP_ROUTE
+              value: {{ .Values.freelightDAO_API.mcpRoute | default "/mcp" | quote }}
             - name: SERVER_TYPE
               value: "api"
             - name: LOG_LEVEL
