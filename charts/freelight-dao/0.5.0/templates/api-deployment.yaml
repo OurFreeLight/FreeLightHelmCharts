@@ -25,7 +25,7 @@
 {{- end -}}
 {{- $hotStartArgs := .Values.freelightDAO_API.hotStartArgs -}}
 {{- if .Values.freelightDAO_API.swaggerUIEnabled -}}
-{{- $hotStartArgs = "--swagger-ui build-web/freelight_daoWeb_AppAPI_openapi-3.0.0-yaml.yaml" -}}
+{{- $hotStartArgs = printf "%s --swagger-ui build-web/freelight_daoWeb_AppAPI_openapi-3.0.0-yaml.yaml" $hotStartArgs | trim -}}
 {{- end -}}
 apiVersion: apps/v1
 kind: Deployment
