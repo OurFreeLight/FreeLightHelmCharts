@@ -22,8 +22,8 @@ data:
       "cookiesDomain": {{ $cookiesDomain | quote }},
       "paypalDonateUrl": {{ printf "%s/donate.html" $webUrl | quote }},
       "header": {
-        "TITLE": {{ default "FreeLight DAO" .Values.freelightDAO_frontend.title | quote }},
-        "PANEL_NAME": {{ default "FreeLight DAO" .Values.freelightDAO_frontend.title | quote }},
+        "TITLE": {{ default "FreeLight Community" .Values.freelightDAO_frontend.title | quote }},
+        "PANEL_NAME": {{ default "FreeLight Community" .Values.freelightDAO_frontend.title | quote }},
         "SIDEBAR_ITEMS": [
           {
             "url": "/users",
