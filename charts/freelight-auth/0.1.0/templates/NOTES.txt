@@ -1,0 +1,3 @@
+FreeLightAuth shared authentication service has been deployed.
+
+Auth: {{ index .Values.freelightAuth.httpRoute.hostnames 0 }}

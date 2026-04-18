@@ -1,0 +1,24 @@
+{{- $fullName := include "freelight-auth.fullname" . -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "freelight-auth.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.httpRoute.gateway.name }}
+      {{- if .Values.httpRoute.gateway.namespace }}
+      namespace: {{ .Values.httpRoute.gateway.namespace }}
+      {{- end }}
+      {{- if .Values.certManager.enabled }}
+      sectionName: https
+      {{- end }}
+  hostnames:
+    {{- range .Values.freelightAuth.httpRoute.hostnames }}
+    - {{ . | quote }}
+    {{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ $fullName }}
+          port: 8100

@@ -1,0 +1,198 @@
+{{- $garnetUrl := printf "redis://%s:%s" .Values.freelightAuth.garnet.server (.Values.freelightAuth.garnet.port | toString) -}}
+{{- $garnetPubSubUrl := printf "redis://%s:%s" .Values.freelightAuth.garnetPubSub.server (.Values.freelightAuth.garnetPubSub.port | toString) -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "freelight-auth.fullname" . }}
+  labels:
+    {{- include "freelight-auth.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "freelight-auth.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "freelight-auth.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.imageSettings.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.imageSettings.pullSecrets }}
+      {{- end }}
+      serviceAccountName: {{ include "freelight-auth.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: freelight-auth-init
+          image: busybox:1.37
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Waiting for database at {{ .Values.freelightAuth.database.server }}:{{ .Values.freelightAuth.database.port }}"
+              while ! nc -z {{ .Values.freelightAuth.database.server }} {{ .Values.freelightAuth.database.port }}; do
+                sleep 1
+              done
+              echo "Database ready"
+              echo "Waiting for Garnet at {{ .Values.freelightAuth.garnet.server }}:{{ .Values.freelightAuth.garnet.port }}"
+              while ! nc -z {{ .Values.freelightAuth.garnet.server }} {{ .Values.freelightAuth.garnet.port }}; do
+                sleep 1
+              done
+              echo "Garnet ready"
+      containers:
+        - name: freelight-auth
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.freelightAuth.image }}"
+          imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8100
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          env:
+            - name: SERVER_TYPE
+              value: "web-api"
+            - name: LOG_LEVEL
+              value: {{ .Values.freelightAuth.logLevel | quote }}
+            - name: HTTP_PORT
+              value: "8100"
+            - name: API_HTTP_PORT
+              value: "8100"
+            - name: BASE_URL
+              value: {{ .Values.freelightAuth.baseWebUrl | quote }}
+            - name: BASE_API_URL
+              value: {{ .Values.freelightAuth.baseApiUrl | quote }}
+            - name: JWT_SECRET_KEY
+              value: {{ .Values.freelightAuth.jwtSecretKey | quote }}
+            - name: RSA_PRIVATE_KEY
+              value: {{ .Values.freelightAuth.rsaPrivateKey | quote }}
+            - name: RSA_PUBLIC_KEY
+              value: {{ .Values.freelightAuth.rsaPublicKey | quote }}
+            - name: DATABASE_TYPE
+              value: "postgres"
+            - name: DATABASE_SERVER
+              value: {{ .Values.freelightAuth.database.server | quote }}
+            - name: DATABASE_PORT
+              value: {{ .Values.freelightAuth.database.port | quote }}
+            - name: DATABASE_USERNAME
+              value: {{ .Values.freelightAuth.database.username | quote }}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.freelightAuth.database.password | quote }}
+            - name: DATABASE_SCHEMA
+              value: {{ .Values.freelightAuth.database.schema | quote }}
+            {{- if .Values.freelightAuth.database.ssl.enabled }}
+            - name: DATABASE_SSL_REJECT_UNAUTHORIZED
+              value: "{{ ternary "1" "0" .Values.freelightAuth.database.ssl.rejectUnauthorized }}"
+            - name: DATABASE_SSL_CA
+              value: {{ .Values.freelightAuth.database.ssl.ca | quote }}
+            - name: DATABASE_SSL_KEY
+              value: {{ .Values.freelightAuth.database.ssl.key | quote }}
+            - name: DATABASE_SSL_CERT
+              value: {{ .Values.freelightAuth.database.ssl.cert | quote }}
+            {{- end }}
+            - name: GARNET_URL
+              value: {{ $garnetUrl | quote }}
+            - name: GARNET_TLS
+              value: "{{ ternary "1" "0" .Values.freelightAuth.garnet.tls }}"
+            - name: GARNET_TLS_INSECURE
+              value: "{{ ternary "1" "0" .Values.freelightAuth.garnet.tlsInsecure }}"
+            - name: GARNET_CLUSTER
+              value: "{{ ternary "1" "0" .Values.freelightAuth.garnet.cluster }}"
+            {{- if .Values.freelightAuth.garnet.username }}
+            - name: GARNET_USERNAME
+              value: {{ .Values.freelightAuth.garnet.username | quote }}
+            {{- end }}
+            {{- if .Values.freelightAuth.garnet.password }}
+            - name: GARNET_PASSWORD
+              value: {{ .Values.freelightAuth.garnet.password | quote }}
+            {{- end }}
+            - name: GARNET_PUBSUB_URL
+              value: {{ $garnetPubSubUrl | quote }}
+            - name: GARNET_PUBSUB_TLS
+              value: "{{ ternary "1" "0" .Values.freelightAuth.garnetPubSub.tls }}"
+            - name: GARNET_PUBSUB_TLS_INSECURE
+              value: "{{ ternary "1" "0" .Values.freelightAuth.garnetPubSub.tlsInsecure }}"
+            {{- if .Values.freelightAuth.garnetPubSub.username }}
+            - name: GARNET_PUBSUB_USERNAME
+              value: {{ .Values.freelightAuth.garnetPubSub.username | quote }}
+            {{- end }}
+            {{- if .Values.freelightAuth.garnetPubSub.password }}
+            - name: GARNET_PUBSUB_PASSWORD
+              value: {{ .Values.freelightAuth.garnetPubSub.password | quote }}
+            {{- end }}
+            {{- if .Values.freelightAuth.botBlocker.enabled }}
+            - name: BOTBLOCKER_URL
+              value: {{ .Values.freelightAuth.botBlocker.url | quote }}
+            - name: BOTBLOCKER_AUTH_TOKEN
+              value: {{ .Values.freelightAuth.botBlocker.authToken | quote }}
+            {{- end }}
+            - name: AWS_SES_REGION
+              value: {{ .Values.freelightAuth.aws.ses.region | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.freelightAuth.aws.ses.accessKey | quote }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.freelightAuth.aws.ses.secretKey | quote }}
+            - name: OTEL_EXPORTER_TYPE
+              value: {{ .Values.freelightAuth.openTelemetry.type | quote }}
+            - name: OTEL_EXPORTER_URL
+              value: {{ .Values.freelightAuth.openTelemetry.url | quote }}
+            - name: OTEL_SERVICE_NAME
+              value: {{ .Values.freelightAuth.openTelemetry.name | quote }}
+            {{- if .Values.freelightAuth.openTelemetry.gcp.authKeySecretName }}
+            - name: GCP_PROJECT_ID
+              value: {{ .Values.freelightAuth.openTelemetry.gcp.projectId | quote }}
+            - name: GCP_KEY_FILEPATH
+              value: "/app/gcp.json"
+            {{- end }}
+            {{- if .Values.freelightAuth.openTelemetry.azure.connectionString }}
+            - name: AZURE_APPINSIGHTS_CONNECTION_STRING
+              value: {{ .Values.freelightAuth.openTelemetry.azure.connectionString | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.freelightAuth.openTelemetry.gcp.authKeySecretName }}
+          volumeMounts:
+            - name: gcp-key-volume
+              mountPath: /app/gcp.json
+              subPath: gcp.json
+          {{- end }}
+      {{- if .Values.freelightAuth.openTelemetry.gcp.authKeySecretName }}
+      volumes:
+        - name: gcp-key-volume
+          secret:
+            secretName: {{ .Values.freelightAuth.openTelemetry.gcp.authKeySecretName | quote }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

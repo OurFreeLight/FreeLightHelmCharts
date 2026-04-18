@@ -1,0 +1,107 @@
+replicaCount: 1
+
+imageSettings:
+  pullSecrets: ""
+  pullPolicy: Always
+
+freelightAuth:
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-auth:0.1.0-staging
+  logLevel: verbose
+  httpRoute:
+    hostnames:
+      - staging-auth.higheredgesoftware.com
+  baseWebUrl: http://localhost:8100
+  baseApiUrl: http://localhost:8100
+  jwtSecretKey: ""
+  rsaPrivateKey: ""
+  rsaPublicKey: ""
+  aws:
+    ses:
+      region: ""
+      accessKey: ""
+      secretKey: ""
+  database:
+    server: ""
+    port: 5432
+    username: ""
+    password: ""
+    schema: freelight_auth
+    ssl:
+      enabled: false
+      rejectUnauthorized: true
+      ca: ""
+      key: ""
+      cert: ""
+  garnet:
+    server: ""
+    port: 6379
+    tls: false
+    tlsInsecure: false
+    cluster: false
+    username: ""
+    password: ""
+  garnetPubSub:
+    server: ""
+    port: 6379
+    tls: false
+    tlsInsecure: false
+    username: ""
+    password: ""
+  botBlocker:
+    enabled: false
+    url: ""
+    authToken: ""
+  openTelemetry:
+    type: "none"
+    url: ""
+    name: "freelight-auth"
+    gcp:
+      projectId: ""
+      authKeySecretName: ""
+    azure:
+      connectionString: ""
+
+certManager:
+  enabled: true
+  email: admin@freelight.org
+  clusterIssuer: letsencrypt-prod
+  solver: http01
+  dns01: {}
+
+httpRoute:
+  gateway:
+    name: freelight-gateway
+    namespace: ""
+    className: eg
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

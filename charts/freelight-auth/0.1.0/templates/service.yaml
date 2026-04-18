@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "freelight-auth.fullname" . }}
+  labels:
+    {{- include "freelight-auth.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8100
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "freelight-auth.selectorLabels" . | nindent 4 }}
