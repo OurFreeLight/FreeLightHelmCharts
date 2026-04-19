@@ -86,6 +86,10 @@ spec:
               value: {{ .Values.freelight.baseApiUrl | quote }}
             - name: JWT_SECRET_KEY
               value: {{ .Values.freelight.jwtSecretKey | quote }}
+            - name: AUTH_URL
+              value: {{ .Values.freelight.authUrl | default "" | quote }}
+            - name: AUTH_JWKS_URL
+              value: {{ .Values.freelight.authJwksUrl | default "" | quote }}
             - name: RECAPTCHA_KEY
               value: {{ .Values.freelight.recaptchaKey | quote }}
             - name: DATABASE_TYPE
