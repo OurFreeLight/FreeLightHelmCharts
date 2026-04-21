@@ -15,6 +15,9 @@ data:
       "cookiesDomain": {{ $cookiesDomain | quote }},
       "authUrl": {{ .Values.freelight.authUrl | default "" | quote }},
       "authClientId": {{ .Values.freelight.authClientId | default "freelight-campaign" | quote }},
+      "header": {
+        "SIDEBAR_ITEMS": []
+      },
       "routePermissions": {
         "/": "public",
         "/login": "public",
@@ -26,7 +29,9 @@ data:
         "/donors": "user",
         "/events": "user",
         "/yard-signs": "user",
-        "/transparency": "public"
+        "/transparency": "public",
+        "/privacy": "public",
+        "/terms": "public"
       }
     }
 {{- end -}}
