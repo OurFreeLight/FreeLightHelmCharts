@@ -15,10 +15,15 @@ spec:
       {{- include "freelight-auth.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        # Rolling tags push a new digest under the same tag, so helm diff
+        # sees no spec change and pods never restart. Keying on
+        # .Release.Revision forces a rollout on every helm upgrade —
+        # matches the same fix applied on the freelight chart.
+        release/revision: {{ .Release.Revision | quote }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "freelight-auth.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
