@@ -29,6 +29,8 @@ data:
         "/donors": "user",
         "/events": "user",
         "/yard-signs": "user",
+        "/members": "user",
+        "/accept-invite": "public",
         "/transparency": "public",
         "/privacy": "public",
         "/terms": "public"
