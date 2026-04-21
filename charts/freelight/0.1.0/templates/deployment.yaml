@@ -174,17 +174,35 @@ spec:
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- if .Values.freelight.openTelemetry.gcp.authKeySecretName }}
+          {{- if or .Values.freelight.useConfigMap .Values.freelight.openTelemetry.gcp.authKeySecretName }}
           volumeMounts:
+            {{- if .Values.freelight.useConfigMap }}
+            - name: frontend-config
+              mountPath: /app/public/config.json
+              subPath: config.json
+              readOnly: true
+            {{- end }}
+            {{- if .Values.freelight.openTelemetry.gcp.authKeySecretName }}
             - name: gcp-key-volume
               mountPath: /app/gcp.json
               subPath: gcp.json
+            {{- end }}
           {{- end }}
-      {{- if .Values.freelight.openTelemetry.gcp.authKeySecretName }}
+      {{- if or .Values.freelight.useConfigMap .Values.freelight.openTelemetry.gcp.authKeySecretName }}
       volumes:
+        {{- if .Values.freelight.useConfigMap }}
+        - name: frontend-config
+          configMap:
+            name: {{ include "freelight.fullname" . }}-frontend-config
+            items:
+              - key: config.json
+                path: config.json
+        {{- end }}
+        {{- if .Values.freelight.openTelemetry.gcp.authKeySecretName }}
         - name: gcp-key-volume
           secret:
             secretName: {{ .Values.freelight.openTelemetry.gcp.authKeySecretName | quote }}
+        {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

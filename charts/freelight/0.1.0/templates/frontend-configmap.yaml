@@ -1,0 +1,32 @@
+{{- if .Values.freelight.useConfigMap -}}
+{{- $apiUrl := .Values.freelight.baseApiUrl -}}
+{{- $webHost := index .Values.freelight.httpRoute.hostnames 0 -}}
+{{- $cookiesDomain := regexReplaceAll "^[^.]*" $webHost "" -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "freelight.fullname" . }}-frontend-config
+  labels:
+    {{- include "freelight.labels" . | nindent 4 }}
+data:
+  config.json: |-
+    {
+      "baseUrl": {{ $apiUrl | quote }},
+      "cookiesDomain": {{ $cookiesDomain | quote }},
+      "authUrl": {{ .Values.freelight.authUrl | default "" | quote }},
+      "authClientId": {{ .Values.freelight.authClientId | default "freelight-campaign" | quote }},
+      "routePermissions": {
+        "/": "public",
+        "/login": "public",
+        "/register": "public",
+        "/auth-callback": "public",
+        "/dashboard": "user",
+        "/campaign-setup": "user",
+        "/volunteers": "user",
+        "/donors": "user",
+        "/events": "user",
+        "/yard-signs": "user",
+        "/transparency": "public"
+      }
+    }
+{{- end -}}

@@ -16,6 +16,10 @@ freelight:
   baseWebUrl: http://localhost:5010
   baseApiUrl: http://localhost:5011
   jwtSecretKey: ""
+  authUrl: ""
+  authJwksUrl: ""
+  authClientId: freelight-campaign
+  useConfigMap: false
   recaptchaKey: ""
   aws:
     ses:
