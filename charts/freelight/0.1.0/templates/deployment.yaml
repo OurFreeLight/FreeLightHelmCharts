@@ -16,6 +16,11 @@ spec:
   template:
     metadata:
       annotations:
+        # Rolling-tag builds (e.g. `0.4.0-staging`) push a new digest under the
+        # same tag, so helm diff sees no change and pods never restart. Keying
+        # an annotation to .Release.Revision forces a rollout on every helm
+        # upgrade so each pipeline run actually replaces the running code.
+        release/revision: {{ .Release.Revision | quote }}
         {{- if .Values.freelight.useConfigMap }}
         checksum/frontend-config: {{ include (print $.Template.BasePath "/frontend-configmap.yaml") . | sha256sum }}
         {{- end }}
