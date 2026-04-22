@@ -40,6 +40,11 @@ freelightDAO_API:
   mcp:
     enabled: false
     route: "/mcp"
+  # FreelightAuth delegation (AUTH-5). Leave blank to use the default
+  # in-cluster svc URL (http://freelight-auth.{namespace}.svc.cluster.local:8100).
+  auth:
+    url: ""
+    jwksUrl: ""
   emailHashing:
     # When enabled, emails are stored as HMAC-SHA256 hashes in the database.
     # WARNING: Once enabled on an existing database, all existing plaintext email

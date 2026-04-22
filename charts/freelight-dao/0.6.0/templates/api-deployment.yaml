@@ -251,6 +251,14 @@ spec:
             {{- end }}
             - name: TESTS_PASSWORD
               value: "{{ .Values.freelightDAO_API.testsPassword }}"
+            # FreelightAuth delegation (AUTH-5). URL defaults to the in-cluster
+            # service in whichever namespace the chart is released to; override
+            # via .Values.freelightDAO_API.auth.{url,jwksUrl} when using an
+            # externally-hosted auth service.
+            - name: AUTH_URL
+              value: {{ .Values.freelightDAO_API.auth.url | default (printf "http://freelight-auth.%s.svc.cluster.local:8100" .Release.Namespace) | quote }}
+            - name: AUTH_JWKS_URL
+              value: {{ .Values.freelightDAO_API.auth.jwksUrl | default (printf "http://freelight-auth.%s.svc.cluster.local:8100/.well-known/jwks.json" .Release.Namespace) | quote }}
             - name: OTEL_EXPORTER_TYPE
               value: "{{ .Values.freelightDAO_API.openTelemetry.type }}"
             - name: OTEL_EXPORTER_URL
