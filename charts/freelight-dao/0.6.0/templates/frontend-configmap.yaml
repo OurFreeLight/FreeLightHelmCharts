@@ -109,7 +109,9 @@ data:
         "/verify": "public"
       },
       "siteKey": {{ default "" .Values.freelightDAO_frontend.recaptchaSiteKey | quote }},
-      "botBlocker": {{ .Values.botBlocker.enabled }}
+      "botBlocker": {{ .Values.botBlocker.enabled }},
+      "authUrl": {{ default "" .Values.freelightDAO_frontend.authUrl | quote }},
+      "authClientId": {{ default "freelight-dao" .Values.freelightDAO_frontend.authClientId | quote }}
     }
 {{- end -}}
 {{- end -}}
