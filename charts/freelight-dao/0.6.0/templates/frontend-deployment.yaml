@@ -14,10 +14,13 @@ spec:
       {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "frontend") .) | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        {{- if and .Values.freelightDAO_frontend.useConfigMap (eq (toString .Values.freelightDAO_frontend.useConfigMap) "true") }}
+        checksum/config: {{ include (print $.Template.BasePath "/frontend-configmap.yaml") . | sha256sum }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "frontend") .) | nindent 8 }}
 	{{- with .Values.podLabels }}
