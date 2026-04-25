@@ -22,6 +22,14 @@ Create a default fully qualified app name.
 {{- end }}
 
 {{/*
+Component-scoped fully qualified name (e.g. "freelight-auth-backend",
+"freelight-auth-frontend"). Pass the component name as `.Component`.
+*/}}
+{{- define "freelight-auth.componentFullname" -}}
+{{- printf "%s-%s" (include "freelight-auth.fullname" .) .Component | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "freelight-auth.chart" -}}
@@ -29,7 +37,7 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common labels
+Common labels (shared across components)
 */}}
 {{- define "freelight-auth.labels" -}}
 helm.sh/chart: {{ include "freelight-auth.chart" . }}
@@ -41,11 +49,21 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Selector labels
+Selector labels (shared across components)
 */}}
 {{- define "freelight-auth.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "freelight-auth.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Component-scoped selector labels — add app.kubernetes.io/component so
+the backend Deployment doesn't accidentally select the frontend pods.
+Pass `.Component` ("backend" or "frontend").
+*/}}
+{{- define "freelight-auth.componentSelectorLabels" -}}
+{{ include "freelight-auth.selectorLabels" . }}
+app.kubernetes.io/component: {{ .Component }}
 {{- end }}
 
 {{/*

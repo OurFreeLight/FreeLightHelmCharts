@@ -14,7 +14,7 @@ spec:
     name: {{ $fullName }}-issuer
     {{- end }}
   dnsNames:
-  {{- range .Values.freelightAuth.httpRoute.hostnames }}
+  {{- range .Values.freelightAuth_frontend.httpRoute.hostnames }}
     - {{ . | quote }}
   {{- end }}
 {{- end -}}

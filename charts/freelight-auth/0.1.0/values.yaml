@@ -4,12 +4,19 @@ imageSettings:
   pullSecrets: ""
   pullPolicy: Always
 
-freelightAuth:
-  image: harbor.higheredgesoftware.com/ourfreelight/freelight-auth:0.1.0-staging
-  logLevel: verbose
+freelightAuth_frontend:
+  enabled: true
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-auth-frontend:0.1.1-staging
+  environment: staging
+  replicaCount: 1
+  resources: {}
   httpRoute:
     hostnames:
       - staging-auth.higheredgesoftware.com
+
+freelightAuth_backend:
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-auth-backend:0.1.1-staging
+  logLevel: verbose
   baseWebUrl: http://localhost:8100
   baseApiUrl: http://localhost:8100
   jwtSecretKey: ""

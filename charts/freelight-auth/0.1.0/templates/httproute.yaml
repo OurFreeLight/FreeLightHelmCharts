@@ -1,8 +1,9 @@
-{{- $fullName := include "freelight-auth.fullname" . -}}
+{{- $frontend := merge (dict "Component" "frontend") . -}}
+{{- $frontendName := include "freelight-auth.componentFullname" $frontend -}}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "freelight-auth.fullname" . }}
   labels:
     {{- include "freelight-auth.labels" . | nindent 4 }}
 spec:
@@ -15,10 +16,10 @@ spec:
       sectionName: https
       {{- end }}
   hostnames:
-    {{- range .Values.freelightAuth.httpRoute.hostnames }}
+    {{- range .Values.freelightAuth_frontend.httpRoute.hostnames }}
     - {{ . | quote }}
     {{- end }}
   rules:
     - backendRefs:
-        - name: {{ $fullName }}
-          port: 8100
+        - name: {{ $frontendName }}
+          port: 80
