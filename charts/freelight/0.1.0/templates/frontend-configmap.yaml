@@ -1,7 +1,7 @@
-{{- if .Values.freelight.useConfigMap -}}
-{{- $apiUrl := .Values.freelight.baseApiUrl -}}
-{{- $webHost := index .Values.freelight.httpRoute.hostnames 0 -}}
+{{- if and .Values.freelight_frontend.enabled .Values.freelight_frontend.useConfigMap -}}
+{{- $webHost := index .Values.freelight_frontend.httpRoute.hostnames 0 -}}
 {{- $cookiesDomain := regexReplaceAll "^[^.]*" $webHost "" -}}
+{{- $apiUrl := default (printf "https://%s" $webHost) .Values.freelight_frontend.apiUrl -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,8 +13,8 @@ data:
     {
       "baseUrl": {{ $apiUrl | quote }},
       "cookiesDomain": {{ $cookiesDomain | quote }},
-      "authUrl": {{ .Values.freelight.authUrl | default "" | quote }},
-      "authClientId": {{ .Values.freelight.authClientId | default "freelight-campaign" | quote }},
+      "authUrl": {{ .Values.freelight_frontend.authUrl | default "" | quote }},
+      "authClientId": {{ .Values.freelight_frontend.authClientId | default "freelight-campaign" | quote }},
       "header": {
         "SIDEBAR_ITEMS": []
       },

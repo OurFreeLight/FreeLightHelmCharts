@@ -4,23 +4,37 @@ imageSettings:
   pullSecrets: ""
   pullPolicy: Always
 
-freelight:
-  image: harbor.higheredgesoftware.com/ourfreelight/freelight:0.1.0-staging
-  logLevel: verbose
+freelight_frontend:
+  enabled: true
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-frontend:0.4.1-staging
+  environment: staging
+  replicaCount: 1
+  resources: {}
+  useConfigMap: true
+  # SPA's API base URL. Defaults to https://<first-frontend-hostname> so the
+  # in-cluster nginx proxy handles /v1/* and OIDC paths transparently.
+  apiUrl: ""
+  authUrl: ""
+  authClientId: freelight-campaign
   httpRoute:
     hostnames:
-      - freelight-staging.higheredgesoftware.com
-  apiHttpRoute:
-    hostnames:
-      - api-freelight-staging.higheredgesoftware.com
+      - staging-freelight.higheredgesoftware.com
+
+freelight_backend:
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-backend:0.4.1-staging
+  logLevel: verbose
   baseWebUrl: http://localhost:5010
-  baseApiUrl: http://localhost:5011
+  baseApiUrl: http://localhost:5010
   jwtSecretKey: ""
   authUrl: ""
   authJwksUrl: ""
-  authClientId: freelight-campaign
-  useConfigMap: false
   recaptchaKey: ""
+  useConfigMap: false
+  # Optional dedicated API hostname. Leave empty to use only the
+  # frontend hostname (the nginx in front proxies /v1/* and OIDC paths
+  # to the backend Service).
+  apiHttpRoute:
+    hostnames: []
   aws:
     ses:
       region: ""

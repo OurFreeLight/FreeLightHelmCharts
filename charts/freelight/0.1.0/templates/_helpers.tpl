@@ -22,6 +22,14 @@ Create a default fully qualified app name.
 {{- end }}
 
 {{/*
+Component-scoped fully qualified name (e.g. "freelight-backend",
+"freelight-frontend"). Pass the component name as `.Component`.
+*/}}
+{{- define "freelight.componentFullname" -}}
+{{- printf "%s-%s" (include "freelight.fullname" .) .Component | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "freelight.chart" -}}
@@ -29,7 +37,7 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common labels
+Common labels (shared across components).
 */}}
 {{- define "freelight.labels" -}}
 helm.sh/chart: {{ include "freelight.chart" . }}
@@ -41,11 +49,20 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Selector labels
+Selector labels (shared across components).
 */}}
 {{- define "freelight.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "freelight.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Component-scoped selector labels — adds app.kubernetes.io/component so
+the backend Deployment doesn't accidentally select frontend pods.
+*/}}
+{{- define "freelight.componentSelectorLabels" -}}
+{{ include "freelight.selectorLabels" . }}
+app.kubernetes.io/component: {{ .Component }}
 {{- end }}
 
 {{/*

@@ -1,4 +1,9 @@
 {{- $fullName := include "freelight.fullname" . -}}
+{{- $frontend := merge (dict "Component" "frontend") . -}}
+{{- $frontendName := include "freelight.componentFullname" $frontend -}}
+{{- $backend := merge (dict "Component" "backend") . -}}
+{{- $backendName := include "freelight.componentFullname" $backend -}}
+# User-facing route → frontend nginx (which proxies API/OIDC paths to backend)
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -15,14 +20,18 @@ spec:
       sectionName: https
       {{- end }}
   hostnames:
-    {{- range .Values.freelight.httpRoute.hostnames }}
+    {{- range .Values.freelight_frontend.httpRoute.hostnames }}
     - {{ . | quote }}
     {{- end }}
   rules:
     - backendRefs:
-        - name: {{ $fullName }}
-          port: 5010
+        - name: {{ $frontendName }}
+          port: 80
+{{- if and .Values.freelight_backend.apiHttpRoute .Values.freelight_backend.apiHttpRoute.hostnames }}
 ---
+# Optional dedicated API hostname → backend SEA directly. Most apps don't
+# need this since the frontend nginx proxies /v1/* to the backend on the
+# main hostname; this is here for legacy clients calling api-* directly.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -39,10 +48,11 @@ spec:
       sectionName: https
       {{- end }}
   hostnames:
-    {{- range .Values.freelight.apiHttpRoute.hostnames }}
+    {{- range .Values.freelight_backend.apiHttpRoute.hostnames }}
     - {{ . | quote }}
     {{- end }}
   rules:
     - backendRefs:
-        - name: {{ $fullName }}
+        - name: {{ $backendName }}
           port: 5010
+{{- end }}
