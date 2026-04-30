@@ -23,6 +23,9 @@ freelight_frontend:
 freelight_backend:
   image: harbor.higheredgesoftware.com/ourfreelight/freelight-backend:0.4.1-staging
   logLevel: verbose
+  mcp:
+    enabled: false
+    route: "/mcp"
   baseWebUrl: http://localhost:5010
   baseApiUrl: http://localhost:5010
   jwtSecretKey: ""

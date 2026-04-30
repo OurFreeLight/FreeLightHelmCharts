@@ -164,6 +164,10 @@ spec:
               value: {{ .Values.freelight_backend.aws.ses.accessKey | quote }}
             - name: AWS_SECRET_ACCESS_KEY
               value: {{ .Values.freelight_backend.aws.ses.secretKey | quote }}
+            - name: MCP_SERVER
+              value: {{ ternary "1" "0" .Values.freelight_backend.mcp.enabled | quote }}
+            - name: MCP_ROUTE
+              value: {{ .Values.freelight_backend.mcp.route | quote }}
             - name: OTEL_EXPORTER_TYPE
               value: {{ .Values.freelight_backend.openTelemetry.type | quote }}
             - name: OTEL_EXPORTER_URL
