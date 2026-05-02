@@ -161,6 +161,14 @@ spec:
               value: {{ .Values.freelightAuth_backend.aws.ses.accessKey | quote }}
             - name: AWS_SECRET_ACCESS_KEY
               value: {{ .Values.freelightAuth_backend.aws.ses.secretKey | quote }}
+            {{- if .Values.freelightAuth_backend.autoVerifyUsers }}
+            - name: AUTO_VERIFY_USERS
+              value: "1"
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.seedUsers }}
+            - name: SEED_USERS
+              value: {{ .Values.freelightAuth_backend.seedUsers | quote }}
+            {{- end }}
             - name: OTEL_EXPORTER_TYPE
               value: {{ .Values.freelightAuth_backend.openTelemetry.type | quote }}
             - name: OTEL_EXPORTER_URL
