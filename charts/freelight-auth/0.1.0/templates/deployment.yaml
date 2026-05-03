@@ -155,6 +155,50 @@ spec:
             - name: BOTBLOCKER_AUTH_TOKEN
               value: {{ .Values.freelightAuth_backend.botBlocker.authToken | quote }}
             {{- end }}
+            {{- if .Values.freelightAuth_backend.authProvider }}
+            - name: AUTH_PROVIDER
+              value: {{ .Values.freelightAuth_backend.authProvider | quote }}
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.ldap.url }}
+            - name: LDAP_URL
+              value: {{ .Values.freelightAuth_backend.ldap.url | quote }}
+            - name: LDAP_BIND_DN
+              value: {{ .Values.freelightAuth_backend.ldap.bindDn | quote }}
+            - name: LDAP_BIND_PASSWORD
+              value: {{ .Values.freelightAuth_backend.ldap.bindPassword | quote }}
+            - name: LDAP_USER_BASE_DN
+              value: {{ .Values.freelightAuth_backend.ldap.userBaseDn | quote }}
+            - name: LDAP_USER_FILTER
+              value: {{ .Values.freelightAuth_backend.ldap.userFilter | default "(mail={{email}})" | quote }}
+            - name: LDAP_ATTR_EMAIL
+              value: {{ .Values.freelightAuth_backend.ldap.attrEmail | default "mail" | quote }}
+            - name: LDAP_ATTR_DISPLAY_NAME
+              value: {{ .Values.freelightAuth_backend.ldap.attrDisplayName | default "displayName" | quote }}
+            - name: LDAP_ATTR_FIRST_NAME
+              value: {{ .Values.freelightAuth_backend.ldap.attrFirstName | default "givenName" | quote }}
+            - name: LDAP_ATTR_LAST_NAME
+              value: {{ .Values.freelightAuth_backend.ldap.attrLastName | default "sn" | quote }}
+            - name: LDAP_TLS_REJECT_UNAUTHORIZED
+              value: "{{ ternary "1" "0" (.Values.freelightAuth_backend.ldap.tlsRejectUnauthorized | default true) }}"
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.oidcRp.issuerUrl }}
+            - name: OIDC_RP_ISSUER_URL
+              value: {{ .Values.freelightAuth_backend.oidcRp.issuerUrl | quote }}
+            - name: OIDC_RP_CLIENT_ID
+              value: {{ .Values.freelightAuth_backend.oidcRp.clientId | quote }}
+            {{- if .Values.freelightAuth_backend.oidcRp.clientSecret }}
+            - name: OIDC_RP_CLIENT_SECRET
+              value: {{ .Values.freelightAuth_backend.oidcRp.clientSecret | quote }}
+            {{- end }}
+            - name: OIDC_RP_REDIRECT_URI
+              value: {{ .Values.freelightAuth_backend.oidcRp.redirectUri | quote }}
+            - name: OIDC_RP_SCOPE
+              value: {{ .Values.freelightAuth_backend.oidcRp.scope | default "openid profile email" | quote }}
+            - name: OIDC_RP_BUTTON_LABEL
+              value: {{ .Values.freelightAuth_backend.oidcRp.buttonLabel | default "Sign in with SSO" | quote }}
+            - name: COOKIES_DOMAIN
+              value: {{ .Values.freelightAuth_backend.oidcRp.cookiesDomain | default "" | quote }}
+            {{- end }}
             - name: AWS_SES_REGION
               value: {{ .Values.freelightAuth_backend.aws.ses.region | quote }}
             - name: AWS_ACCESS_KEY_ID
