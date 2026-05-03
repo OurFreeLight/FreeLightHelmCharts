@@ -155,9 +155,14 @@ spec:
             - name: BOTBLOCKER_AUTH_TOKEN
               value: {{ .Values.freelightAuth_backend.botBlocker.authToken | quote }}
             {{- end }}
+            {{- if .Values.freelightAuth_backend.authProvidersSecretName }}
+            - name: AUTH_PROVIDERS_FILE
+              value: "/etc/freelight-auth/providers.json"
+            {{- else }}
             {{- if .Values.freelightAuth_backend.authProvider }}
             - name: AUTH_PROVIDER
               value: {{ .Values.freelightAuth_backend.authProvider | quote }}
+            {{- end }}
             {{- end }}
             {{- if .Values.freelightAuth_backend.ldap.url }}
             - name: LDAP_URL
@@ -231,17 +236,32 @@ spec:
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- if .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName }}
+          {{- if or .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName .Values.freelightAuth_backend.authProvidersSecretName }}
           volumeMounts:
+            {{- if .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName }}
             - name: gcp-key-volume
               mountPath: /app/gcp.json
               subPath: gcp.json
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.authProvidersSecretName }}
+            - name: auth-providers-volume
+              mountPath: /etc/freelight-auth/providers.json
+              subPath: providers.json
+              readOnly: true
+            {{- end }}
           {{- end }}
-      {{- if .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName }}
+      {{- if or .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName .Values.freelightAuth_backend.authProvidersSecretName }}
       volumes:
+        {{- if .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName }}
         - name: gcp-key-volume
           secret:
             secretName: {{ .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName | quote }}
+        {{- end }}
+        {{- if .Values.freelightAuth_backend.authProvidersSecretName }}
+        - name: auth-providers-volume
+          secret:
+            secretName: {{ .Values.freelightAuth_backend.authProvidersSecretName | quote }}
+        {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
