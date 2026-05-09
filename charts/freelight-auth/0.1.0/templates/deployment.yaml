@@ -164,45 +164,54 @@ spec:
               value: {{ .Values.freelightAuth_backend.authProvider | quote }}
             {{- end }}
             {{- end }}
-            {{- if .Values.freelightAuth_backend.ldap.url }}
+            {{- /* ldap is optional — when the values omit it entirely we
+                  must not dereference .url on nil. Pull the dict via
+                  `with` so `.` rebinds to the ldap dict and absent
+                  values just skip the block. */}}
+            {{- with .Values.freelightAuth_backend.ldap }}
+            {{- if .url }}
             - name: LDAP_URL
-              value: {{ .Values.freelightAuth_backend.ldap.url | quote }}
+              value: {{ .url | quote }}
             - name: LDAP_BIND_DN
-              value: {{ .Values.freelightAuth_backend.ldap.bindDn | quote }}
+              value: {{ .bindDn | quote }}
             - name: LDAP_BIND_PASSWORD
-              value: {{ .Values.freelightAuth_backend.ldap.bindPassword | quote }}
+              value: {{ .bindPassword | quote }}
             - name: LDAP_USER_BASE_DN
-              value: {{ .Values.freelightAuth_backend.ldap.userBaseDn | quote }}
+              value: {{ .userBaseDn | quote }}
             - name: LDAP_USER_FILTER
-              value: {{ .Values.freelightAuth_backend.ldap.userFilter | default "(mail={{email}})" | quote }}
+              value: {{ .userFilter | default "(mail={{email}})" | quote }}
             - name: LDAP_ATTR_EMAIL
-              value: {{ .Values.freelightAuth_backend.ldap.attrEmail | default "mail" | quote }}
+              value: {{ .attrEmail | default "mail" | quote }}
             - name: LDAP_ATTR_DISPLAY_NAME
-              value: {{ .Values.freelightAuth_backend.ldap.attrDisplayName | default "displayName" | quote }}
+              value: {{ .attrDisplayName | default "displayName" | quote }}
             - name: LDAP_ATTR_FIRST_NAME
-              value: {{ .Values.freelightAuth_backend.ldap.attrFirstName | default "givenName" | quote }}
+              value: {{ .attrFirstName | default "givenName" | quote }}
             - name: LDAP_ATTR_LAST_NAME
-              value: {{ .Values.freelightAuth_backend.ldap.attrLastName | default "sn" | quote }}
+              value: {{ .attrLastName | default "sn" | quote }}
             - name: LDAP_TLS_REJECT_UNAUTHORIZED
-              value: "{{ ternary "1" "0" (.Values.freelightAuth_backend.ldap.tlsRejectUnauthorized | default true) }}"
+              value: "{{ ternary "1" "0" (.tlsRejectUnauthorized | default true) }}"
             {{- end }}
-            {{- if .Values.freelightAuth_backend.oidcRp.issuerUrl }}
+            {{- end }}
+            {{- /* Same nil-safety as ldap above. */}}
+            {{- with .Values.freelightAuth_backend.oidcRp }}
+            {{- if .issuerUrl }}
             - name: OIDC_RP_ISSUER_URL
-              value: {{ .Values.freelightAuth_backend.oidcRp.issuerUrl | quote }}
+              value: {{ .issuerUrl | quote }}
             - name: OIDC_RP_CLIENT_ID
-              value: {{ .Values.freelightAuth_backend.oidcRp.clientId | quote }}
-            {{- if .Values.freelightAuth_backend.oidcRp.clientSecret }}
+              value: {{ .clientId | quote }}
+            {{- if .clientSecret }}
             - name: OIDC_RP_CLIENT_SECRET
-              value: {{ .Values.freelightAuth_backend.oidcRp.clientSecret | quote }}
+              value: {{ .clientSecret | quote }}
             {{- end }}
             - name: OIDC_RP_REDIRECT_URI
-              value: {{ .Values.freelightAuth_backend.oidcRp.redirectUri | quote }}
+              value: {{ .redirectUri | quote }}
             - name: OIDC_RP_SCOPE
-              value: {{ .Values.freelightAuth_backend.oidcRp.scope | default "openid profile email" | quote }}
+              value: {{ .scope | default "openid profile email" | quote }}
             - name: OIDC_RP_BUTTON_LABEL
-              value: {{ .Values.freelightAuth_backend.oidcRp.buttonLabel | default "Sign in with SSO" | quote }}
+              value: {{ .buttonLabel | default "Sign in with SSO" | quote }}
             - name: COOKIES_DOMAIN
-              value: {{ .Values.freelightAuth_backend.oidcRp.cookiesDomain | default "" | quote }}
+              value: {{ .cookiesDomain | default "" | quote }}
+            {{- end }}
             {{- end }}
             - name: AWS_SES_REGION
               value: {{ .Values.freelightAuth_backend.aws.ses.region | quote }}
