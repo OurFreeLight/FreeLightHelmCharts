@@ -30,7 +30,7 @@ data:
         "/events": "user",
         "/yard-signs": "user",
         "/members": "user",
-        "/posts": "user",
+        "/posts": "public",
         "/settings": "user",
         "/accept-invite": "public",
         "/transparency": "public",
