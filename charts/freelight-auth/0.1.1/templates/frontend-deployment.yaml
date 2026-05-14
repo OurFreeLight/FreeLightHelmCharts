@@ -1,0 +1,79 @@
+{{- if .Values.freelightAuth_frontend.enabled -}}
+{{- $component := "frontend" -}}
+{{- $ctx := merge (dict "Component" $component) . -}}
+{{- $backend := merge (dict "Component" "backend") . -}}
+{{- $backendName := include "freelight-auth.componentFullname" $backend -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "freelight-auth.componentFullname" $ctx }}
+  labels:
+    {{- include "freelight-auth.componentSelectorLabels" $ctx | nindent 4 }}
+    {{- include "freelight-auth.labels" . | nindent 4 }}
+spec:
+  replicas: {{ default 1 .Values.freelightAuth_frontend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "freelight-auth.componentSelectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        release/revision: {{ .Release.Revision | quote }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "freelight-auth.componentSelectorLabels" $ctx | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.imageSettings.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.imageSettings.pullSecrets }}
+      {{- end }}
+      serviceAccountName: {{ include "freelight-auth.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: freelight-auth-frontend
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.freelightAuth_frontend.image }}"
+          imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: ENVIRONMENT
+              value: {{ default "staging" .Values.freelightAuth_frontend.environment | quote }}
+            - name: BACKEND_UPSTREAM
+              value: "http://{{ $backendName }}:8100"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml (default .Values.resources .Values.freelightAuth_frontend.resources) | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
