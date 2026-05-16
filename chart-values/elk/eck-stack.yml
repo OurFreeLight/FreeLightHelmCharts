@@ -1,0 +1,164 @@
+---
+eck-elasticsearch:
+  enabled: true
+
+  # Name of the Elasticsearch instance.
+  #
+  fullnameOverride: elasticsearch
+
+  nodeSets:
+  - name: default
+    count: 1
+    # Comment out when setting the vm.max_map_count via initContainer, as these are mutually exclusive.
+    # For production workloads, it is strongly recommended to increase the kernel setting vm.max_map_count to 262144
+    # and leave node.store.allow_mmap unset.
+    # ref: https://www.elastic.co/guide/en/cloud-on-k8s/master/k8s-virtual-memory.html
+    #
+    config:
+      node.store.allow_mmap: false
+
+  podTemplate:
+      spec:
+        containers:
+        - name: elasticsearch
+          resources:
+            limits:
+              memory: 4Gi
+            requests:
+              memory: 2Gi
+
+eck-kibana:
+  enabled: true
+
+  # Name of the Kibana instance.
+  #
+  fullnameOverride: kibana
+
+  ingress:
+    enabled: false
+    annotations: {}
+    labels: {}
+    pathType: Prefix
+    hosts:
+      - host: kibana.highersoftware.local
+        path: /
+    tls:
+      enabled: false
+
+  spec:
+    config:
+      xpack.fleet.packages:
+      - name: apm
+        version: latest
+
+eck-apm-server:
+  enabled: true
+
+  # Count of APM Server replicas to create.
+  #
+  count: 1
+
+  # Reference to ECK-managed Elasticsearch resource.
+  #
+  elasticsearchRef:
+    name: elasticsearch
+  kibanaRef:
+    name: kibana
+  http:
+    service:
+      spec:
+        ports:
+        - name: http
+          port: 8200
+          targetPort: 8200
+
+eck-beats:
+  enabled: true
+  spec:
+    type: filebeat
+    config:
+      filebeat.inputs:
+      - type: log
+        paths:
+          - /data/logstash-tutorial.log
+      processors:
+      - add_host_metadata: {}
+      - add_cloud_metadata: {}
+      output.logstash:
+        # This needs to be {{logstash-name}}-ls-beats:5044
+        hosts: ["logstash-ls-beats-ls-beats:5044"]
+    deployment:
+      podTemplate:
+        spec:
+          automountServiceAccountToken: true
+          initContainers:
+            - name: download-tutorial
+              image: curlimages/curl
+              command: ["/bin/sh"]
+              args: ["-c", "exit 0;"]
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+          containers:
+            - name: filebeat
+              securityContext:
+                runAsUser: 1000
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+                - name: beat-data
+                  mountPath: /usr/share/filebeat/data
+          volumes:
+            - name: data
+              emptydir: {}
+            - name: beat-data
+              emptydir: {}
+
+eck-logstash:
+  enabled: true
+  # This is required to be able to set the logstash
+  # output of beats in a consistent manner.
+  fullnameOverride: "logstash-ls-beats"
+  elasticsearchRefs:
+    # This clusterName is required to match the environment variables
+    # used in the below config.string output section.
+    - clusterName: eck
+      name: elasticsearch
+  pipelines:
+    - pipeline.id: main
+      config.string: |
+        input {
+          beats {
+            port => 5044
+          }
+        }
+        filter {
+          grok {
+            match => { "message" => "%{HTTPD_COMMONLOG}"}
+          }
+          geoip {
+            source => "[source][address]"
+            target => "[source]"
+          }
+        }
+        output {
+          elasticsearch {
+            hosts => [ "${ECK_ES_HOSTS}" ]
+            user => "${ECK_ES_USER}"
+            password => "${ECK_ES_PASSWORD}"
+            ssl_certificate_authorities => "${ECK_ES_SSL_CERTIFICATE_AUTHORITY}"
+          }
+        }
+  services:
+    - name: beats
+      service:
+        spec:
+          type: ClusterIP
+          ports:
+            - port: 5044
+              name: "filebeat"
+              protocol: TCP
+              targetPort: 5044
+
+eck-enterprise-search:
+  enabled: false

@@ -1,0 +1,6 @@
+FreeLight campaign platform has been deployed.
+
+Web: {{ index .Values.freelight_frontend.httpRoute.hostnames 0 }}
+{{- if and .Values.freelight_backend.apiHttpRoute .Values.freelight_backend.apiHttpRoute.hostnames }}
+API: {{ index .Values.freelight_backend.apiHttpRoute.hostnames 0 }}
+{{- end }}

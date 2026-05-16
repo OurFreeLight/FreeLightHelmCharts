@@ -1,14 +1,14 @@
-{{- if .Values.database.deploy }}
+{{- if .Values.garnet.deploy }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "freelight-dao.fullname" . }}-db
+  name: {{ include "freelight-dao.fullname" . }}-garnet
   labels:
-    {{- include "freelight-dao.labels" . | nindent 4 }}
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "garnet") .) | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{- include "freelight-dao.selectorLabels" . | nindent 6 }}
+      {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "garnet") .) | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -16,7 +16,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "freelight-dao.selectorLabels" . | nindent 8 }}
+        {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "garnet") .) | nindent 8 }}
 	{{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -25,61 +25,37 @@ spec:
       imagePullSecrets:
         - name: {{ .Values.imageSettings.pullSecrets }}
       {{- end }}
-      serviceAccountName: {{ include "freelight-dao.serviceAccountName" . }}
+      serviceAccountName: {{ include "freelight-dao.serviceAccountName" . }}-garnet-sa
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: database
+        - name: garnet
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.database.image }}"
+          image: "{{ .Values.garnet.image }}"
           imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
           ports:
-            - name: database
-              containerPort: 3306
+            - name: garnet
+              containerPort: 6379
               protocol: TCP
           livenessProbe:
-            exec:
-              command:
-                - mysqladmin
-                - ping
-                - -h
-                - localhost
+            tcpSocket:
+              port: 6379
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 3
           readinessProbe:
-            exec:
-              command:
-                - mysqladmin
-                - ping
-                - -h
-                - localhost
-            initialDelaySeconds: 5
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 20
             periodSeconds: 2
             timeoutSeconds: 1
             successThreshold: 1
             failureThreshold: 3
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: "{{ .Values.database.rootPassword }}"
-            - name: MYSQL_DATABASE
-              value: "{{ .Values.database.schema }}"
-            - name: MYSQL_USER
-              value: "{{ .Values.database.username }}"
-            - name: MYSQL_PASSWORD
-              value: "{{ .Values.database.password }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            - mountPath: /var/lib/mysql
-              name: database-data
-      volumes:
-        - name: database-data
-          persistentVolumeClaim:
-            claimName: {{ include "freelight-dao.fullname" . }}-database-data
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

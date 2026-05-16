@@ -1,0 +1,26 @@
+{{- if .Values.httpRoute.enabled -}}
+{{- $fullName := include "freelight-landing.fullname" . -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "freelight-landing.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.httpRoute.gateway.name }}
+      {{- if .Values.httpRoute.gateway.namespace }}
+      namespace: {{ .Values.httpRoute.gateway.namespace }}
+      {{- end }}
+      {{- if .Values.certManager.enabled }}
+      sectionName: https
+      {{- end }}
+  hostnames:
+    {{- range .Values.httpRoute.hostnames }}
+    - {{ . | quote }}
+    {{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ $fullName }}
+          port: {{ .Values.service.port }}
+{{- end }}

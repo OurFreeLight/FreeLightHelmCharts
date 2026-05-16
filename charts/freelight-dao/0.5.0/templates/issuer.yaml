@@ -1,5 +1,30 @@
 {{- if .Values.ingress.certManager.enabled }}
+{{- if not .Values.ingress.certManager.clusterIssuer }}
 {{- $fullName := include "freelight-dao.fullname" . -}}
+{{- if .Values.freelightDAO_frontend.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ $fullName }}-frontend-issuer
+spec:
+  acme:
+    email: {{ .Values.ingress.certManager.email }}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ $fullName }}-frontend-private-key
+    solvers:
+    - selector: {}
+      {{- if eq .Values.ingress.certManager.solver "dns01" }}
+      dns01:
+        {{- toYaml .Values.ingress.certManager.dns01 | nindent 8 }}
+      {{- else }}
+      http01:
+        ingress:
+          class: {{ .Values.ingress.className }}
+      {{- end }}
+---
+{{- end -}}
+{{- if .Values.freelightDAO_API.enabled -}}
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
@@ -12,7 +37,35 @@ spec:
       name: {{ $fullName }}-private-key
     solvers:
     - selector: {}
+      {{- if eq .Values.ingress.certManager.solver "dns01" }}
+      dns01:
+        {{- toYaml .Values.ingress.certManager.dns01 | nindent 8 }}
+      {{- else }}
       http01:
         ingress:
           class: {{ .Values.ingress.className }}
+      {{- end }}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ $fullName }}-dicebear-issuer
+spec:
+  acme:
+    email: {{ .Values.ingress.certManager.email }}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ $fullName }}-dicebear-private-key
+    solvers:
+    - selector: {}
+      {{- if eq .Values.ingress.certManager.solver "dns01" }}
+      dns01:
+        {{- toYaml .Values.ingress.certManager.dns01 | nindent 8 }}
+      {{- else }}
+      http01:
+        ingress:
+          class: {{ .Values.ingress.className }}
+      {{- end }}
 {{- end }}
+{{- end -}}
+{{- end -}}

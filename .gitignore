@@ -6,13 +6,19 @@
 *.tfplan.json
 *.tfstate
 *.tfstate.backup
+terraform.*.backup
 
 custom-values.yaml
 .current-env
 
 env.*/
 
+temp.yaml
+temp.yml
+
 .terraform/
 dist/
 
 custom/
+
+chart-values/env.staging/

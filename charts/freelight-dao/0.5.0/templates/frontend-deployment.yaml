@@ -1,0 +1,83 @@
+{{- if .Values.freelightDAO_frontend.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "freelight-dao.fullname" . }}-frontend
+  labels:
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "frontend") .) | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "frontend") .) | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "frontend") .) | nindent 8 }}
+	{{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.imageSettings.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.imageSettings.pullSecrets }}
+      {{- end }}
+      serviceAccountName: {{ include "freelight-dao.serviceAccountName" . }}-frontend-sa
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: freelight-dao-frontend
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.freelightDAO_frontend.image }}"
+          imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
+          env: 
+            - name: ENVIRONMENT
+              value: {{ .Values.freelightDAO_frontend.environment | quote }}
+          ports:
+            - name: frontend-http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: frontend-http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: frontend-http
+          resources:
+            {{- toYaml .Values.freelightDAO_API.frontendResources | nindent 12 }}
+      {{- if .Values.freelightDAO_frontend.useConfigMap }}
+          volumeMounts:
+            - name: frontend-config
+              mountPath: /usr/share/nginx/html/config.json
+              subPath: config.json
+              readOnly: true
+      volumes:
+        - name: frontend-config
+          configMap:
+            name: frontend-config
+            items:
+              - key: config.json
+                path: config.json
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end -}}

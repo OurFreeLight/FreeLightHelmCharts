@@ -1,0 +1,20 @@
+{{- if .Values.ingress.certManager.enabled }}
+{{- $fullName := include "freelight-docs.fullname" . }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $fullName }}-docs-certificate
+spec:
+  secretName: {{ $fullName }}-docs-tls
+  issuerRef:
+  {{- if not .Values.ingress.certManager.clusterIssuer }}
+    kind: ClusterIssuer
+    name: {{ .Values.ingress.certManager.clusterIssuer | quote }}
+  {{- else }}
+    name: {{ $fullName }}-docs-issuer
+  {{- end }}
+  dnsNames:
+  {{- range .Values.ingress.hosts }}
+    - {{ .host | quote }}
+  {{- end }}
+{{- end -}}

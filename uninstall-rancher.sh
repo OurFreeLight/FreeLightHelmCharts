@@ -1,10 +1,24 @@
 #!/usr/bin/env bash
 
-helm uninstall rancher --namespace cattle-system
+if [ ! -f "./.env" ]; then
+  echo ".env file is missing."
 
-kubectl delete namespace cattle-system
-kubectl delete namespace cattle-fleet-clusters-system
-kubectl delete namespace cattle-fleet-system
-kubectl delete namespace cattle-global-nt
-kubectl delete namespace cattle-impersonation-system
-kubectl delete namespace cattle-provisioning-capi-system
+  exit 1
+fi
+
+source ./.env
+
+KUBECONFIG_STR=""
+
+if [ "$KUBECONFIG_PATH" != "" ]; then
+  KUBECONFIG_STR="--kubeconfig $KUBECONFIG_PATH"
+fi
+
+helm uninstall $KUBECONFIG_STR rancher --namespace cattle-system
+
+kubectl $KUBECONFIG_STR delete namespace cattle-system
+kubectl $KUBECONFIG_STR delete namespace cattle-fleet-clusters-system
+kubectl $KUBECONFIG_STR delete namespace cattle-fleet-system
+kubectl $KUBECONFIG_STR delete namespace cattle-global-nt
+kubectl $KUBECONFIG_STR delete namespace cattle-impersonation-system
+kubectl $KUBECONFIG_STR delete namespace cattle-provisioning-capi-system

@@ -1,0 +1,29 @@
+{{- if .Values.httpRoute.gateway.create }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.httpRoute.gateway.name }}
+spec:
+  gatewayClassName: {{ .Values.httpRoute.gateway.className }}
+  listeners:
+  - name: http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: Same
+  {{- if .Values.httpRoute.gateway.tls.certificateRefs }}
+  - name: https
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+      {{- range .Values.httpRoute.gateway.tls.certificateRefs }}
+      - name: {{ . }}
+      {{- end }}
+    allowedRoutes:
+      namespaces:
+        from: Same
+  {{- end }}
+{{- end }}

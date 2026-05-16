@@ -5,9 +5,23 @@ The FreeLight Helm Charts repository provides a collection of [Helm](https://hel
 * Kubernetes 1.20+
 * Helm 3.x+
 * Terraform (optional)
+* Postgres
+* Redis, Valkey, or Microsoft Garnet
 
 ## Helm Deployment
-This assumes you have a Kubernetes cluster setup and Helm installed.  If you do not, see the [Setting up the Cluster](#Setting-up-the-Cluster) section below.
+**A proper helm chart repo is still in the process of being developed, please pardon our dust.** This assumes you have a Kubernetes cluster setup and Helm installed. If you do not, see the [Setting up the Cluster](#Setting-up-the-Cluster) section below.
+
+To deploy the Helm Charts, enter:
+```bash
+git clone https://github.com/OurFreeLight/FreeLightHelmCharts.git
+```
+
+Navigate into the root directory of this repo, create a `.env` file and put in the values that match best for your system, then enter:
+```bash
+./install.sh
+```
+
+This will install the helm chart onto your cluster.
 
 ## Setting up the Cluster
 If you do not have a Kubernetes cluster setup, you can use this repo to setup a cluster using [Terraform](https://www.terraform.io/).

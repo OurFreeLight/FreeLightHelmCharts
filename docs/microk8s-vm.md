@@ -43,6 +43,18 @@ kubectl get nodes
 ```
 You're all setup! Now you can deploy FreeLight applications using the [Helm Deployment](../README.md#Helm-Deployment) section.
 
+## Recommended Addons to Enable
+We recommend installing the following Microk8s addons:
+* cert-manager
+* dns
+* ha-cluster
+* helm
+* helm3
+* hostpath-storage
+* ingress
+
+If the "ingress" addon is enabled, be sure to set the `ingress.className` in your `values.yaml` to "public"
+
 ## Kubernetes Dashboard
 You can manage the cluster using the Kubernetes Dashboard. To access the dashboard, run:
 ```bash

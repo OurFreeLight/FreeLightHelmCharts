@@ -1,0 +1,41 @@
+{{- if and .Values.freelight_frontend.enabled .Values.freelight_frontend.useConfigMap -}}
+{{- $webHost := index .Values.freelight_frontend.httpRoute.hostnames 0 -}}
+{{- $cookiesDomain := regexReplaceAll "^[^.]*" $webHost "" -}}
+{{- $apiUrl := default (printf "https://%s" $webHost) .Values.freelight_frontend.apiUrl -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "freelight.fullname" . }}-frontend-config
+  labels:
+    {{- include "freelight.labels" . | nindent 4 }}
+data:
+  config.json: |-
+    {
+      "baseUrl": {{ $apiUrl | quote }},
+      "cookiesDomain": {{ $cookiesDomain | quote }},
+      "authUrl": {{ .Values.freelight_frontend.authUrl | default "" | quote }},
+      "authClientId": {{ .Values.freelight_frontend.authClientId | default "freelight-campaign" | quote }},
+      "header": {
+        "SIDEBAR_ITEMS": []
+      },
+      "routePermissions": {
+        "/": "public",
+        "/login": "public",
+        "/register": "public",
+        "/auth-callback": "public",
+        "/dashboard": "user",
+        "/campaign-setup": "user",
+        "/volunteers": "user",
+        "/donors": "user",
+        "/events": "user",
+        "/yard-signs": "user",
+        "/members": "user",
+        "/posts": "public",
+        "/settings": "user",
+        "/accept-invite": "public",
+        "/transparency": "public",
+        "/privacy": "public",
+        "/terms": "public"
+      }
+    }
+{{- end -}}

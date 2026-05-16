@@ -1,0 +1,15 @@
+{{- if .Values.ingress.certManager.enabled }}
+{{- $fullName := include "freelight-landing.fullname" . }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $fullName }}-landing-certificate
+spec:
+  secretName: {{ $fullName }}-landing-tls
+  issuerRef:
+    name: {{ $fullName }}-landing-issuer
+  dnsNames:
+  {{- range .Values.ingress.hosts }}
+    - {{ .host | quote }}
+  {{- end }}
+{{- end -}}

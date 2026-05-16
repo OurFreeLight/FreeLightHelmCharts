@@ -3,7 +3,7 @@
 variable "k8s_version" {
   description = "The version of Kubernetes to use"
   type        = string
-  default     = "1.27"
+  default     = "1.29"
 }
 
 variable "k8s_type" {
@@ -47,6 +47,22 @@ variable "domain" {
   type        = string
 }
 
+variable "domain_landing" {
+  description = "The domain for the landing page to use for static web hosting."
+  type        = string
+}
+
+variable "domain_alt_landing" {
+  description = "The alt domain for the landing page to use for static web hosting."
+  type        = string
+  default     = ""
+}
+
+variable "domain_docs" {
+  description = "The domain for the docs to use for static web hosting."
+  type        = string
+}
+
 variable "api_static_ip_name" {
   description = "The name of the existing static IP address for the API"
   type        = string
@@ -62,13 +78,13 @@ variable "aws_region" {
 variable "aws_vm_admin_instance_type" {
   description = "The instance type for the admin VM"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.large"
 }
 
 variable "aws_vm_instance_type" {
   description = "The instance type for the VM"
   type        = string
-  default     = "t3.small"
+  default     = "t3.large"
 }
 
 variable "aws_storage_size" {
@@ -94,6 +110,12 @@ variable "aws_eks_node_group_iam_role_arn" {
 
 variable "delete_protection" {
   description = "Will enable delete protection on the environment being created."
+  type        = bool
+  default     = true
+}
+
+variable "aws_route53_modify_dns" {
+  description = "Will make modifications to the dns records for cert validation and cloudfront setup."
   type        = bool
   default     = true
 }

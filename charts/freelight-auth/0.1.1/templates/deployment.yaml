@@ -1,0 +1,290 @@
+{{- $component := "backend" -}}
+{{- $ctx := merge (dict "Component" $component) . -}}
+{{- $garnetUrl := printf "redis://%s:%s" .Values.freelightAuth_backend.garnet.server (.Values.freelightAuth_backend.garnet.port | toString) -}}
+{{- $garnetPubSubUrl := printf "redis://%s:%s" .Values.freelightAuth_backend.garnetPubSub.server (.Values.freelightAuth_backend.garnetPubSub.port | toString) -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "freelight-auth.componentFullname" $ctx }}
+  labels:
+    {{- include "freelight-auth.componentSelectorLabels" $ctx | nindent 4 }}
+    {{- include "freelight-auth.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "freelight-auth.componentSelectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Rolling tags push a new digest under the same tag, so helm diff
+        # sees no spec change and pods never restart. Keying on
+        # .Release.Revision forces a rollout on every helm upgrade.
+        release/revision: {{ .Release.Revision | quote }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "freelight-auth.componentSelectorLabels" $ctx | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.imageSettings.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.imageSettings.pullSecrets }}
+      {{- end }}
+      serviceAccountName: {{ include "freelight-auth.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: freelight-auth-init
+          image: busybox:1.37
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Waiting for database at {{ .Values.freelightAuth_backend.database.server }}:{{ .Values.freelightAuth_backend.database.port }}"
+              while ! nc -z {{ .Values.freelightAuth_backend.database.server }} {{ .Values.freelightAuth_backend.database.port }}; do
+                sleep 1
+              done
+              echo "Database ready"
+              echo "Waiting for Garnet at {{ .Values.freelightAuth_backend.garnet.server }}:{{ .Values.freelightAuth_backend.garnet.port }}"
+              while ! nc -z {{ .Values.freelightAuth_backend.garnet.server }} {{ .Values.freelightAuth_backend.garnet.port }}; do
+                sleep 1
+              done
+              echo "Garnet ready"
+      containers:
+        - name: freelight-auth-backend
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.freelightAuth_backend.image }}"
+          imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8100
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          env:
+            - name: SERVER_TYPE
+              value: "web-api"
+            - name: LOG_LEVEL
+              value: {{ .Values.freelightAuth_backend.logLevel | quote }}
+            - name: HTTP_PORT
+              value: "8100"
+            - name: API_HTTP_PORT
+              value: "8100"
+            - name: BASE_URL
+              value: {{ .Values.freelightAuth_backend.baseWebUrl | quote }}
+            - name: BASE_API_URL
+              value: {{ .Values.freelightAuth_backend.baseApiUrl | quote }}
+            - name: JWT_SECRET_KEY
+              value: {{ .Values.freelightAuth_backend.jwtSecretKey | quote }}
+            # Hard fail in production if RSA keys are unset. Without persistent
+            # keys, the auth pod auto-generates an in-memory keypair on every
+            # start, invalidating every outstanding JWT on each pod restart.
+            # See AUTH-11 in FreeLight DAO for the original incident report.
+            - name: RSA_PRIVATE_KEY
+              value: {{ if eq .Release.Namespace "production" }}{{ required "freelightAuth_backend.rsaPrivateKey must be set for production deployments — auto-generated in-memory keypair invalidates JWTs on every pod restart. Generate an RSA-2048 PEM keypair (base64-wrapped) and set it in HELM_CHART_VALUES." .Values.freelightAuth_backend.rsaPrivateKey | quote }}{{ else }}{{ .Values.freelightAuth_backend.rsaPrivateKey | quote }}{{ end }}
+            - name: RSA_PUBLIC_KEY
+              value: {{ if eq .Release.Namespace "production" }}{{ required "freelightAuth_backend.rsaPublicKey must be set for production deployments alongside rsaPrivateKey." .Values.freelightAuth_backend.rsaPublicKey | quote }}{{ else }}{{ .Values.freelightAuth_backend.rsaPublicKey | quote }}{{ end }}
+            - name: DATABASE_TYPE
+              value: "postgres"
+            - name: DATABASE_SERVER
+              value: {{ .Values.freelightAuth_backend.database.server | quote }}
+            - name: DATABASE_PORT
+              value: {{ .Values.freelightAuth_backend.database.port | quote }}
+            - name: DATABASE_USERNAME
+              value: {{ .Values.freelightAuth_backend.database.username | quote }}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.freelightAuth_backend.database.password | quote }}
+            - name: DATABASE_SCHEMA
+              value: {{ .Values.freelightAuth_backend.database.schema | quote }}
+            {{- if .Values.freelightAuth_backend.database.ssl.enabled }}
+            - name: DATABASE_SSL_REJECT_UNAUTHORIZED
+              value: "{{ ternary "1" "0" .Values.freelightAuth_backend.database.ssl.rejectUnauthorized }}"
+            - name: DATABASE_SSL_CA
+              value: {{ .Values.freelightAuth_backend.database.ssl.ca | quote }}
+            - name: DATABASE_SSL_KEY
+              value: {{ .Values.freelightAuth_backend.database.ssl.key | quote }}
+            - name: DATABASE_SSL_CERT
+              value: {{ .Values.freelightAuth_backend.database.ssl.cert | quote }}
+            {{- end }}
+            - name: GARNET_URL
+              value: {{ $garnetUrl | quote }}
+            - name: GARNET_TLS
+              value: "{{ ternary "1" "0" .Values.freelightAuth_backend.garnet.tls }}"
+            - name: GARNET_TLS_INSECURE
+              value: "{{ ternary "1" "0" .Values.freelightAuth_backend.garnet.tlsInsecure }}"
+            - name: GARNET_CLUSTER
+              value: "{{ ternary "1" "0" .Values.freelightAuth_backend.garnet.cluster }}"
+            {{- if .Values.freelightAuth_backend.garnet.username }}
+            - name: GARNET_USERNAME
+              value: {{ .Values.freelightAuth_backend.garnet.username | quote }}
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.garnet.password }}
+            - name: GARNET_PASSWORD
+              value: {{ .Values.freelightAuth_backend.garnet.password | quote }}
+            {{- end }}
+            - name: GARNET_PUBSUB_URL
+              value: {{ $garnetPubSubUrl | quote }}
+            - name: GARNET_PUBSUB_TLS
+              value: "{{ ternary "1" "0" .Values.freelightAuth_backend.garnetPubSub.tls }}"
+            - name: GARNET_PUBSUB_TLS_INSECURE
+              value: "{{ ternary "1" "0" .Values.freelightAuth_backend.garnetPubSub.tlsInsecure }}"
+            {{- if .Values.freelightAuth_backend.garnetPubSub.username }}
+            - name: GARNET_PUBSUB_USERNAME
+              value: {{ .Values.freelightAuth_backend.garnetPubSub.username | quote }}
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.garnetPubSub.password }}
+            - name: GARNET_PUBSUB_PASSWORD
+              value: {{ .Values.freelightAuth_backend.garnetPubSub.password | quote }}
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.botBlocker.enabled }}
+            - name: BOTBLOCKER_URL
+              value: {{ .Values.freelightAuth_backend.botBlocker.url | quote }}
+            - name: BOTBLOCKER_AUTH_TOKEN
+              value: {{ .Values.freelightAuth_backend.botBlocker.authToken | quote }}
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.authProvidersSecretName }}
+            - name: AUTH_PROVIDERS_FILE
+              value: "/etc/freelight-auth/providers.json"
+            {{- else }}
+            {{- if .Values.freelightAuth_backend.authProvider }}
+            - name: AUTH_PROVIDER
+              value: {{ .Values.freelightAuth_backend.authProvider | quote }}
+            {{- end }}
+            {{- end }}
+            {{- /* ldap is optional — when the values omit it entirely we
+                  must not dereference .url on nil. Pull the dict via
+                  `with` so `.` rebinds to the ldap dict and absent
+                  values just skip the block. */}}
+            {{- with .Values.freelightAuth_backend.ldap }}
+            {{- if .url }}
+            - name: LDAP_URL
+              value: {{ .url | quote }}
+            - name: LDAP_BIND_DN
+              value: {{ .bindDn | quote }}
+            - name: LDAP_BIND_PASSWORD
+              value: {{ .bindPassword | quote }}
+            - name: LDAP_USER_BASE_DN
+              value: {{ .userBaseDn | quote }}
+            - name: LDAP_USER_FILTER
+              value: {{ .userFilter | default "(mail={{email}})" | quote }}
+            - name: LDAP_ATTR_EMAIL
+              value: {{ .attrEmail | default "mail" | quote }}
+            - name: LDAP_ATTR_DISPLAY_NAME
+              value: {{ .attrDisplayName | default "displayName" | quote }}
+            - name: LDAP_ATTR_FIRST_NAME
+              value: {{ .attrFirstName | default "givenName" | quote }}
+            - name: LDAP_ATTR_LAST_NAME
+              value: {{ .attrLastName | default "sn" | quote }}
+            - name: LDAP_TLS_REJECT_UNAUTHORIZED
+              value: "{{ ternary "1" "0" (.tlsRejectUnauthorized | default true) }}"
+            {{- end }}
+            {{- end }}
+            {{- /* Same nil-safety as ldap above. */}}
+            {{- with .Values.freelightAuth_backend.oidcRp }}
+            {{- if .issuerUrl }}
+            - name: OIDC_RP_ISSUER_URL
+              value: {{ .issuerUrl | quote }}
+            - name: OIDC_RP_CLIENT_ID
+              value: {{ .clientId | quote }}
+            {{- if .clientSecret }}
+            - name: OIDC_RP_CLIENT_SECRET
+              value: {{ .clientSecret | quote }}
+            {{- end }}
+            - name: OIDC_RP_REDIRECT_URI
+              value: {{ .redirectUri | quote }}
+            - name: OIDC_RP_SCOPE
+              value: {{ .scope | default "openid profile email" | quote }}
+            - name: OIDC_RP_BUTTON_LABEL
+              value: {{ .buttonLabel | default "Sign in with SSO" | quote }}
+            - name: COOKIES_DOMAIN
+              value: {{ .cookiesDomain | default "" | quote }}
+            {{- end }}
+            {{- end }}
+            - name: AWS_SES_REGION
+              value: {{ .Values.freelightAuth_backend.aws.ses.region | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.freelightAuth_backend.aws.ses.accessKey | quote }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.freelightAuth_backend.aws.ses.secretKey | quote }}
+            {{- if .Values.freelightAuth_backend.autoVerifyUsers }}
+            - name: AUTO_VERIFY_USERS
+              value: "1"
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.seedUsers }}
+            - name: SEED_USERS
+              value: {{ .Values.freelightAuth_backend.seedUsers | quote }}
+            {{- end }}
+            - name: OTEL_EXPORTER_TYPE
+              value: {{ .Values.freelightAuth_backend.openTelemetry.type | quote }}
+            - name: OTEL_EXPORTER_URL
+              value: {{ .Values.freelightAuth_backend.openTelemetry.url | quote }}
+            - name: OTEL_SERVICE_NAME
+              value: {{ .Values.freelightAuth_backend.openTelemetry.name | quote }}
+            {{- if .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName }}
+            - name: GCP_PROJECT_ID
+              value: {{ .Values.freelightAuth_backend.openTelemetry.gcp.projectId | quote }}
+            - name: GCP_KEY_FILEPATH
+              value: "/app/gcp.json"
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.openTelemetry.azure.connectionString }}
+            - name: AZURE_APPINSIGHTS_CONNECTION_STRING
+              value: {{ .Values.freelightAuth_backend.openTelemetry.azure.connectionString | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if or .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName .Values.freelightAuth_backend.authProvidersSecretName }}
+          volumeMounts:
+            {{- if .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName }}
+            - name: gcp-key-volume
+              mountPath: /app/gcp.json
+              subPath: gcp.json
+            {{- end }}
+            {{- if .Values.freelightAuth_backend.authProvidersSecretName }}
+            - name: auth-providers-volume
+              mountPath: /etc/freelight-auth/providers.json
+              subPath: providers.json
+              readOnly: true
+            {{- end }}
+          {{- end }}
+      {{- if or .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName .Values.freelightAuth_backend.authProvidersSecretName }}
+      volumes:
+        {{- if .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName }}
+        - name: gcp-key-volume
+          secret:
+            secretName: {{ .Values.freelightAuth_backend.openTelemetry.gcp.authKeySecretName | quote }}
+        {{- end }}
+        {{- if .Values.freelightAuth_backend.authProvidersSecretName }}
+        - name: auth-providers-volume
+          secret:
+            secretName: {{ .Values.freelightAuth_backend.authProvidersSecretName | quote }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

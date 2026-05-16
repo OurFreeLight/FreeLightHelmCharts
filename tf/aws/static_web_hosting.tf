@@ -117,20 +117,21 @@ resource "aws_acm_certificate" "freelight_acm_certificate" {
 data "aws_route53_zone" "freelight_route53_zone" {
   name         = "${var.root_domain}."
   private_zone = false
+  count        = var.aws_route53_modify_dns ? 1 : 0
 }
 
 resource "aws_route53_record" "freelight_acm_certificate_dns_record" {
-  for_each = {
+  for_each = var.aws_route53_modify_dns ? {
     for dvo in aws_acm_certificate.freelight_acm_certificate[0].domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
       type   = dvo.resource_record_type
       value  = dvo.resource_record_value
     }
-  }
+  } : {}
 
   name    = each.value.name
   type    = each.value.type
-  zone_id = data.aws_route53_zone.freelight_route53_zone.zone_id
+  zone_id = var.aws_route53_modify_dns ? data.aws_route53_zone.freelight_route53_zone[0].zone_id : ""
   records = [each.value.value]
   ttl     = 60
 }
@@ -139,7 +140,7 @@ resource "aws_acm_certificate_validation" "freelight_acm_certificate_validation"
   provider                = aws.us_east_1
   count                   = var.frontend_deployment_type == "cloudfront" ? 1 : 0
   certificate_arn         = aws_acm_certificate.freelight_acm_certificate[0].arn
-  validation_record_fqdns = [for record in aws_route53_record.freelight_acm_certificate_dns_record : record.fqdn]
+  # validation_record_fqdns = [for record in aws_route53_record.freelight_acm_certificate_dns_record : record.fqdn]
 }
 
 locals {
@@ -246,9 +247,9 @@ resource "aws_cloudfront_distribution" "freelight_cloudfront_distribution" {
 
 resource "aws_route53_record" "freelight_route53_zone_record" {
   depends_on = [aws_cloudfront_distribution.freelight_cloudfront_distribution[0]]
-  count      = var.frontend_deployment_type == "cloudfront" ? 1 : 0
+  count      = var.frontend_deployment_type == "cloudfront" && var.aws_route53_modify_dns ? 1 : 0
 
-  zone_id = data.aws_route53_zone.freelight_route53_zone.zone_id
+  zone_id = var.aws_route53_modify_dns ? data.aws_route53_zone.freelight_route53_zone[0].zone_id : ""
   name    = var.domain
   type    = "A"
 

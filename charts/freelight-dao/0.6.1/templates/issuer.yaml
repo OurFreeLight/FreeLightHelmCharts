@@ -1,0 +1,85 @@
+{{- if .Values.certManager.enabled -}}
+{{- if not .Values.certManager.clusterIssuer -}}
+{{- $fullName := include "freelight-dao.fullname" . -}}
+{{- if .Values.freelightDAO_frontend.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ $fullName }}-frontend-issuer
+spec:
+  acme:
+    email: {{ .Values.certManager.email }}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ $fullName }}-frontend-private-key
+    solvers:
+    - selector: {}
+      {{- if eq .Values.certManager.solver "dns01" }}
+      dns01:
+        {{- toYaml .Values.certManager.dns01 | nindent 8 }}
+      {{- else }}
+      http01:
+        gatewayHTTPRoute:
+          parentRefs:
+          - name: {{ .Values.httpRoute.gateway.name }}
+            {{- if .Values.httpRoute.gateway.namespace }}
+            namespace: {{ .Values.httpRoute.gateway.namespace }}
+            {{- end }}
+      {{- end }}
+{{- end }}
+{{- if .Values.freelightDAO_API.enabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ $fullName }}-api-issuer
+spec:
+  acme:
+    email: {{ .Values.certManager.email }}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ $fullName }}-api-private-key
+    solvers:
+    - selector: {}
+      {{- if eq .Values.certManager.solver "dns01" }}
+      dns01:
+        {{- toYaml .Values.certManager.dns01 | nindent 8 }}
+      {{- else }}
+      http01:
+        gatewayHTTPRoute:
+          parentRefs:
+          - name: {{ .Values.httpRoute.gateway.name }}
+            {{- if .Values.httpRoute.gateway.namespace }}
+            namespace: {{ .Values.httpRoute.gateway.namespace }}
+            {{- end }}
+      {{- end }}
+{{- end }}
+{{- if .Values.dicebear.deploy }}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ $fullName }}-dicebear-issuer
+spec:
+  acme:
+    email: {{ .Values.certManager.email }}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ $fullName }}-dicebear-private-key
+    solvers:
+    - selector: {}
+      {{- if eq .Values.certManager.solver "dns01" }}
+      dns01:
+        {{- toYaml .Values.certManager.dns01 | nindent 8 }}
+      {{- else }}
+      http01:
+        gatewayHTTPRoute:
+          parentRefs:
+          - name: {{ .Values.httpRoute.gateway.name }}
+            {{- if .Values.httpRoute.gateway.namespace }}
+            namespace: {{ .Values.httpRoute.gateway.namespace }}
+            {{- end }}
+      {{- end }}
+{{- end }}
+{{- end -}}
+{{- end -}}

@@ -1,0 +1,327 @@
+{{- if .Values.freelightDAO_API.enabled -}}
+{{- $databaseServer := .Values.freelightDAO_API.database.server -}}
+{{- if .Values.database.deploy -}}
+{{- $databaseServer = include "freelight-dao.serviceAccountName" . -}}
+{{- $databaseServer = print $databaseServer "-db-service" -}}
+{{- end -}}
+{{- $databaseReadServer := .Values.freelightDAO_API.databaseRead.server -}}
+{{- $garnetServer := .Values.freelightDAO_API.garnet.server -}}
+{{- $garnetUrl := printf "redis://%s:%s" .Values.freelightDAO_API.garnet.server (.Values.freelightDAO_API.garnet.port | toString) -}}
+{{- if .Values.garnet.deploy -}}
+{{- $garnetServer = include "freelight-dao.serviceAccountName" . -}}
+{{- $garnetServer = print $garnetServer "-garnet-service" -}}
+{{- $garnetUrl = printf "redis://%s:%s" $garnetServer (.Values.freelightDAO_API.garnet.port | toString) -}}
+{{- end -}}
+{{- $garnetPubSubServer := .Values.freelightDAO_API.garnetPubSub.server -}}
+{{- $garnetPubSubUrl := printf "redis://%s:%s" .Values.freelightDAO_API.garnetPubSub.server (.Values.freelightDAO_API.garnetPubSub.port | toString) -}}
+{{- if .Values.garnetPubSub.deploy -}}
+{{- $garnetPubSubServer = include "freelight-dao.serviceAccountName" . -}}
+{{- $garnetPubSubServer = print $garnetPubSubServer "-garnet-pubsub-service" -}}
+{{- $garnetPubSubUrl = printf "redis://%s:%s" $garnetPubSubServer (.Values.freelightDAO_API.garnetPubSub.port | toString) -}}
+{{- end -}}
+{{- $nodeStartArgs := .Values.freelightDAO_API.nodeStartArgs -}}
+{{- if .Values.freelightDAO_API.debugEnabled -}}
+{{- $nodeStartArgs = "--inspect=0.0.0.0" -}}
+{{- end -}}
+{{- $hotStartArgs := .Values.freelightDAO_API.hotStartArgs -}}
+{{- if .Values.freelightDAO_API.swaggerUIEnabled -}}
+{{- $hotStartArgs = "--swagger-ui build-web/freelight_daoWeb_AppAPI_openapi-3.0.0-yaml.yaml" -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "freelight-dao.fullname" . }}-api
+  labels:
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "api") .) | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "api") .) | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "freelight-dao.selectorLabels" (merge (dict "SelectorName" "api") .) | nindent 8 }}
+	{{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.imageSettings.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.imageSettings.pullSecrets }}
+      {{- end }}
+      serviceAccountName: {{ include "freelight-dao.serviceAccountName" . }}-api-sa
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: freelight-dao-init
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: busybox:1.37
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Waiting for database to be ready at {{ $databaseServer }}:{{ .Values.freelightDAO_API.database.port }}"
+              while ! nc -z {{ $databaseServer }} {{ .Values.freelightDAO_API.database.port }}; do
+                sleep 1
+              done
+              echo "Database ready"
+{{- if $databaseReadServer }}
+              echo "Waiting for read database to be ready at {{ $databaseReadServer }}:{{ .Values.freelightDAO_API.databaseRead.port }}"
+              while ! nc -z {{ $databaseReadServer }} {{ .Values.freelightDAO_API.databaseRead.port }}; do
+                sleep 1
+              done
+              echo "Read Database ready"
+{{- end -}}
+              echo "Waiting for Garnet to be ready at {{ $garnetServer }}:{{ .Values.freelightDAO_API.garnet.port }}"
+              while ! nc -z {{ $garnetServer }} {{ .Values.freelightDAO_API.garnet.port }}; do
+                sleep 1
+              done
+              echo "Garnet ready"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- if .Values.freelightDAO_API.database.migrations.enabled }}
+        - name: freelight-dao-migrations
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.freelightDAO_API.database.migrations.image | quote }}
+          imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
+          env:
+            - name: DATABASE_SERVER
+              value: {{ $databaseServer | quote }}
+            - name: DATABASE_USERNAME
+              value: {{ .Values.freelightDAO_API.database.username | quote }}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.freelightDAO_API.database.password | quote }}
+            - name: DATABASE_PORT
+              value: {{ .Values.freelightDAO_API.database.port | quote }}
+            - name: DATABASE_SCHEMA
+              value: {{ .Values.freelightDAO_API.database.schema | quote }}
+            - name: RUN_MIGRATIONS
+              value: "1"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        {{- end }}
+      containers:
+        - name: freelight-dao-api
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.freelightDAO_API.image }}"
+          imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
+          ports:
+            - name: api
+              containerPort: 5001
+              protocol: TCP
+            {{- if .Values.freelightDAO_API.debugEnabled }}
+            - name: api-debug
+              containerPort: 9229
+              protocol: TCP
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: api
+          readinessProbe:
+            httpGet:
+              path: /
+              port: api
+          env:
+            - name: NODEJS_START_ARGS
+              value: {{ $nodeStartArgs | quote }}
+            - name: HOT_RUN_ARGS
+              value: {{ $hotStartArgs | quote }}
+            - name: SERVER_TYPE
+              value: "api"
+            - name: LOG_LEVEL
+              value: "{{ .Values.freelightDAO_API.logLevel }}"
+            - name: API_HTTP_PORT
+              value: "5001"
+            - name: BASE_URL
+              value: "{{ .Values.freelightDAO_API.baseWebUrl }}"
+            - name: BASE_API_URL
+              value: "{{ .Values.freelightDAO_API.baseApiUrl }}"
+            - name: JWT_SECRET_KEY
+              value: "{{ .Values.freelightDAO_API.jwtSecretKey }}"
+            - name: RECAPTCHA_KEY
+              value: "{{ .Values.freelightDAO_API.recaptchaKey }}"
+            - name: DATABASE_TYPE
+              value: "postgres"
+            - name: DATABASE_SERVER
+              value: "{{ $databaseServer }}"
+            - name: DATABASE_PORT
+              value: "{{ .Values.freelightDAO_API.database.port }}"
+            - name: DATABASE_USERNAME
+              value: "{{ .Values.freelightDAO_API.database.username }}"
+            - name: DATABASE_PASSWORD
+              value: "{{ .Values.freelightDAO_API.database.password }}"
+            - name: DATABASE_SCHEMA
+              value: "{{ .Values.freelightDAO_API.database.schema }}"
+            {{- if .Values.freelightDAO_API.database.ssl.enabled }}
+            - name: DATABASE_SSL_REJECT_UNAUTHORIZED
+              value: "{{ ternary "1" "0" .Values.freelightDAO_API.database.ssl.rejectUnauthorized }}"
+            - name: DATABASE_SSL_CA
+              value: "{{ .Values.freelightDAO_API.database.ssl.ca }}"
+            - name: DATABASE_SSL_KEY
+              value: "{{ .Values.freelightDAO_API.database.ssl.key }}"
+            - name: DATABASE_SSL_CERT
+              value: "{{ .Values.freelightDAO_API.database.ssl.cert }}"
+            {{- end }}
+            - name: DATABASE_READ_SERVER
+              value: "{{ $databaseReadServer }}"
+            - name: DATABASE_READ_PORT
+              value: "{{ .Values.freelightDAO_API.databaseRead.port }}"
+            - name: DATABASE_READ_USERNAME
+              value: "{{ .Values.freelightDAO_API.databaseRead.username }}"
+            - name: DATABASE_READ_PASSWORD
+              value: "{{ .Values.freelightDAO_API.databaseRead.password }}"
+            - name: DATABASE_READ_SCHEMA
+              value: "{{ .Values.freelightDAO_API.databaseRead.schema }}"
+            {{- if .Values.freelightDAO_API.databaseRead.ssl.enabled }}
+            - name: DATABASE_READ_SSL_REJECT_UNAUTHORIZED
+              value: "{{ ternary "1" "0" .Values.freelightDAO_API.databaseRead.ssl.rejectUnauthorized }}"
+            - name: DATABASE_READ_SSL_CA
+              value: "{{ .Values.freelightDAO_API.databaseRead.ssl.ca }}"
+            - name: DATABASE_READ_SSL_KEY
+              value: "{{ .Values.freelightDAO_API.databaseRead.ssl.key }}"
+            - name: DATABASE_READ_SSL_CERT
+              value: "{{ .Values.freelightDAO_API.databaseRead.ssl.cert }}"
+            {{- end }}
+            - name: AWS_SES_REGION
+              value: "{{ .Values.freelightDAO_API.aws.ses.region }}"
+            - name: AWS_ACCESS_KEY_ID
+              value: "{{ .Values.freelightDAO_API.aws.ses.accessKey }}"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "{{ .Values.freelightDAO_API.aws.ses.secretKey }}"
+            {{- if .Values.freelightDAO_API.ratelimiter.redis.enabled }}
+            - name: RATE_LIMITER_REDIS_HOST
+              value: "{{ .Values.freelightDAO_API.ratelimiter.redis.host }}"
+            - name: RATE_LIMITER_REDIS_PORT
+              value: "{{ .Values.freelightDAO_API.ratelimiter.redis.port }}"
+            - name: RATE_LIMITER_REDIS_USERNAME
+              value: "{{ .Values.freelightDAO_API.ratelimiter.redis.username }}"
+            - name: RATE_LIMITER_REDIS_PASSWORD
+              value: "{{ .Values.freelightDAO_API.ratelimiter.redis.password }}"
+            {{- end }}
+            {{- if .Values.botBlocker.enabled }}
+            - name: BOTBLOCKER_URL
+              value: {{ .Values.botBlocker.url | quote }}
+            - name: BOTBLOCKER_AUTH_TOKEN
+              value: {{ .Values.botBlocker.authToken | quote }}
+            {{- end }}
+            - name: GARNET_URL
+              value: {{ $garnetUrl | quote }}
+            - name: GARNET_TLS
+              value: "{{ ternary "1" "0" .Values.freelightDAO_API.garnet.tls }}"
+            - name: GARNET_TLS_INSECURE
+              value: "{{ ternary "1" "0" .Values.freelightDAO_API.garnet.tlsInsecure }}"
+            {{- if .Values.freelightDAO_API.garnet.username }}
+            - name: GARNET_USERNAME
+              value: "{{ .Values.freelightDAO_API.garnet.username }}"
+            {{- end }}
+            {{- if .Values.freelightDAO_API.garnet.password }}
+            - name: GARNET_PASSWORD
+              value: "{{ .Values.freelightDAO_API.garnet.password }}"
+            {{- end }}
+            - name: GARNET_CLUSTER
+              value: "{{ ternary "1" "0" .Values.freelightDAO_API.garnet.cluster }}"
+            - name: GARNET_PUBSUB_URL
+              value: {{ $garnetPubSubUrl | quote }}
+            - name: GARNET_PUBSUB_TLS
+              value: "{{ ternary "1" "0" .Values.freelightDAO_API.garnetPubSub.tls }}"
+            - name: GARNET_PUBSUB_TLS_INSECURE
+              value: "{{ ternary "1" "0" .Values.freelightDAO_API.garnetPubSub.tlsInsecure }}"
+            {{- if .Values.freelightDAO_API.garnetPubSub.username }}
+            - name: GARNET_PUBSUB_USERNAME
+              value: "{{ .Values.freelightDAO_API.garnetPubSub.username }}"
+            {{- end }}
+            {{- if .Values.freelightDAO_API.garnetPubSub.password }}
+            - name: GARNET_PUBSUB_PASSWORD
+              value: "{{ .Values.freelightDAO_API.garnetPubSub.password }}"
+            {{- end }}
+            - name: TESTS_PASSWORD
+              value: "{{ .Values.freelightDAO_API.testsPassword }}"
+            - name: OTEL_EXPORTER_TYPE
+              value: "{{ .Values.freelightDAO_API.openTelemetry.type }}"
+            - name: OTEL_EXPORTER_URL
+              value: "{{ .Values.freelightDAO_API.openTelemetry.url }}"
+            - name: OTEL_SERVICE_NAME
+              value: "{{ .Values.freelightDAO_API.openTelemetry.name }}"
+            {{- if .Values.freelightDAO_API.openTelemetry.gcp.authKeySecretName }}
+            - name: GCP_PROJECT_ID
+              value: "{{ .Values.freelightDAO_API.openTelemetry.gcp.projectId }}"
+            - name: GCP_KEY_FILEPATH
+              value: "/app/gcp.json"
+            {{- end }}
+            {{- if .Values.freelightDAO_API.openTelemetry.azure.connectionString }}
+            - name: AZURE_APPINSIGHTS_CONNECTION_STRING
+              value: "{{ .Values.freelightDAO_API.openTelemetry.azure.connectionString }}"
+            {{- end }}
+            - name: FILE_STORAGE_LOCATION
+              value: {{ .Values.freelightDAO_API.fileStorage.location | quote }}
+            {{- if eq .Values.freelightDAO_API.fileStorage.location "s3" }}
+            - name: FILE_AWS_REGION
+              value: {{ .Values.freelightDAO_API.aws.s3.region | quote }}
+            - name: FILE_AWS_ACCESS_KEY_ID
+              value: {{ .Values.freelightDAO_API.aws.s3.accessKey | quote }}
+            - name: FILE_AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.freelightDAO_API.aws.s3.secretKey | quote }}
+            - name: FILE_AWS_S3_BUCKET
+              value: {{ .Values.freelightDAO_API.aws.s3.bucket | quote }}
+            - name: FILE_AWS_ENC_S3_BUCKET
+              value: {{ .Values.freelightDAO_API.aws.s3.encryptedBucket | quote }}
+            {{- end }}
+            - name: SEED_ISSUE_STATUSES
+              value: '[{ "name": "Draft", "description": "The issue is not ready to be done, this needs to be thought out more and refined." }, { "name": "To Do", "description": "The issue is ready to be done." }, { "name": "In Progress", "description": "The issue is in progress." }, { "name": "Ready for Review", "description": "The issue has work completed and is ready to be reviewed." }, { "name": "Done", "description": "The issue is complete." }, { "name": "Rejected", "description": "The issue was rejected." }]'
+            - name: SEED_USERS
+              value: "[{ \"userType\": \"admin\", \"firstName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.firstName }}\", \"lastName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.lastName }}\", \"displayName\": \"{{ .Values.freelightDAO_API.defaultAdminUser.displayName }}\", \"email\": \"{{ .Values.freelightDAO_API.defaultAdminUser.email }}\", \"password\": \"{{ .Values.freelightDAO_API.defaultAdminUser.password }}\", \"verified\": true }]"
+            - name: MEMBERSHIP_BENEFITS
+              value: {{ ternary "1" "0" .Values.freelightDAO_API.settings.membershipBenefits | quote }}
+            - name: ANYONE_CAN_SIGN_AGREEMENTS
+              value: {{ ternary "1" "0" .Values.freelightDAO_API.settings.anyoneCanSignAgreements | quote }}
+          resources:
+            {{- toYaml .Values.freelightDAO_API.apiResources | nindent 12 }}
+          volumeMounts:
+            {{- if eq .Values.freelightDAO_API.fileStorage.location "local" -}}
+            - name: freelight-dao-api-data
+              mountPath: /app/data
+            {{- end }}
+            {{- if .Values.freelightDAO_API.openTelemetry.gcp.authKeySecretName }}
+            - name: gcp-key-volume
+              mountPath: /app/gcp.json
+              subPath: gcp.json
+            {{- end }}
+      volumes:
+        {{- if eq .Values.freelightDAO_API.fileStorage.location "local" -}}
+        - name: freelight-dao-api-data
+          persistentVolumeClaim:
+            claimName: {{ include "freelight-dao.fullname" . }}-api-pvc
+        {{- end }}
+        {{- if .Values.freelightDAO_API.openTelemetry.gcp.authKeySecretName }}
+        - name: gcp-key-volume
+          secret:
+            secretName: "{{ .Values.freelightDAO_API.openTelemetry.gcp.authKeySecretName }}"
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end -}}

@@ -1,0 +1,56 @@
+{{- if .Values.freelightDAO_API.database.backup.enabled }}
+{{- $databaseServer := .Values.freelightDAO_API.database.server -}}
+{{- if .Values.database.deploy -}}
+{{- $databaseServer = include "freelight-dao.serviceAccountName" . -}}
+{{- $databaseServer = print $databaseServer "-db-service" -}}
+{{- end -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "freelight-dao.fullname" . }}-backup-job
+  labels:
+    {{- include "freelight-dao.labels" (merge (dict "SelectorName" "backup-job") .) | nindent 4 }}
+spec:
+  schedule: {{ .Values.freelightDAO_API.database.backup.schedule | quote }}
+  jobTemplate:
+    spec:
+      parallelism: 1
+      template:
+        metadata:
+          creationTimestamp: null
+        spec: 
+          containers:
+          - name: backup
+            image: {{ .Values.freelightDAO_API.database.backup.image | quote }}
+            imagePullPolicy: {{ .Values.imageSettings.pullPolicy }}
+            command:
+              - /bin/bash
+              - -c
+              - cd /backup/ && ./backup.sh
+            env:
+              - name: DATABASE_SERVER
+                value: {{ $databaseServer | quote }}
+              - name: DATABASE_PORT
+                value: {{ .Values.freelightDAO_API.database.port | quote }}
+              - name: POSTGRES_USER
+                value: {{ .Values.freelightDAO_API.database.username | quote }}
+              - name: POSTGRES_PASSWORD
+                value: {{ .Values.freelightDAO_API.database.password | quote }}
+              - name: POSTGRES_DB
+                value: {{ .Values.freelightDAO_API.database.schema | quote }}
+              - name: BACKUP_TYPE
+                value: {{ .Values.freelightDAO_API.database.backup.type | quote }}
+              - name: BACKUP_PASSWORD
+                value: {{ .Values.freelightDAO_API.database.backup.password | quote }}
+              - name: AWS_ACCESS_KEY_ID
+                value: {{ .Values.freelightDAO_API.database.backup.aws.accessKeyId | quote }}
+              - name: AWS_SECRET_ACCESS_KEY
+                value: {{ .Values.freelightDAO_API.database.backup.aws.secretAccessKey | quote }}
+              - name: AWS_DEFAULT_REGION
+                value: {{ .Values.freelightDAO_API.database.backup.aws.defaultRegion | quote }}
+              - name: AWS_BUCKET_NAME
+                value: {{ .Values.freelightDAO_API.database.backup.aws.bucketName | quote }}
+              - name: AWS_BUCKET_PATH
+                value: {{ .Values.freelightDAO_API.database.backup.aws.bucketPath | quote }}
+          restartPolicy: Never
+{{- end }}
