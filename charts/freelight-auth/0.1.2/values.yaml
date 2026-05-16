@@ -1,0 +1,125 @@
+replicaCount: 1
+
+imageSettings:
+  pullSecrets: ""
+  pullPolicy: Always
+
+freelightAuth_frontend:
+  enabled: true
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-auth-frontend:0.1.1-staging
+  environment: staging
+  replicaCount: 1
+  resources: {}
+  httpRoute:
+    hostnames:
+      - staging-auth.higheredgesoftware.com
+
+freelightAuth_backend:
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-auth-backend:0.1.1-staging
+  logLevel: verbose
+  baseWebUrl: http://localhost:8100
+  baseApiUrl: http://localhost:8100
+  jwtSecretKey: ""
+  rsaPrivateKey: ""
+  rsaPublicKey: ""
+  aws:
+    ses:
+      region: ""
+      accessKey: ""
+      secretKey: ""
+  database:
+    server: ""
+    port: 5432
+    username: ""
+    password: ""
+    schema: freelight_auth
+    ssl:
+      enabled: false
+      rejectUnauthorized: true
+      ca: ""
+      key: ""
+      cert: ""
+  garnet:
+    server: ""
+    port: 6379
+    tls: false
+    tlsInsecure: false
+    cluster: false
+    username: ""
+    password: ""
+  garnetPubSub:
+    server: ""
+    port: 6379
+    tls: false
+    tlsInsecure: false
+    username: ""
+    password: ""
+  botBlocker:
+    enabled: false
+    url: ""
+    authToken: ""
+  # DAO service-to-service: used to look up a user's membership status
+  # when they try to change their display name. `serviceToken` must match
+  # AUTH_DAO_SERVICE_TOKEN on the DAO side. Leaving `url` empty defaults
+  # to the in-cluster DAO API service in the same namespace.
+  dao:
+    url: ""
+    serviceToken: ""
+  # Display-name change gate: when true, only users with an active DAO
+  # membership can change their display name (admins always bypass).
+  # Set to false to disable the gate entirely (matches MEMBERSHIP_BENEFITS=0).
+  membershipBenefitsEnabled: true
+  openTelemetry:
+    type: "none"
+    url: ""
+    name: "freelight-auth"
+    gcp:
+      projectId: ""
+      authKeySecretName: ""
+    azure:
+      connectionString: ""
+
+certManager:
+  enabled: true
+  email: admin@freelight.org
+  clusterIssuer: letsencrypt-prod
+  solver: http01
+  dns01: {}
+
+httpRoute:
+  gateway:
+    name: freelight-gateway
+    namespace: ""
+    className: eg
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
