@@ -1,0 +1,20 @@
+{{- if .Values.freelightAuth_frontend.enabled -}}
+{{- $component := "frontend" -}}
+{{- $ctx := merge (dict "Component" $component) . -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "freelight-auth.componentFullname" $ctx }}
+  labels:
+    {{- include "freelight-auth.componentSelectorLabels" $ctx | nindent 4 }}
+    {{- include "freelight-auth.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "freelight-auth.componentSelectorLabels" $ctx | nindent 4 }}
+{{- end }}
