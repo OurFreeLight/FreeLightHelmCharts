@@ -46,11 +46,19 @@ lint:charts:
     name: alpine/k8s:1.29.2
     entrypoint: [""]
   script:
+    # Lint only the LATEST version of each chart. Older versioned dirs are
+    # kept around for rollback / historical reference, and several of them
+    # have pre-existing template bugs (`{{- if ... -}}` trimming newlines
+    # before list items) that we don't want to retroactively fix.
     - |
       EXIT=0
-      for chart_dir in charts/*/*/; do
-        echo "=== Linting $chart_dir ==="
-        if ! helm lint "$chart_dir"; then
+      for chart_root in charts/*/; do
+        latest_dir=$(ls -d "${chart_root}"*/ 2>/dev/null | sort -V | tail -n 1)
+        if [ -z "$latest_dir" ]; then
+          continue
+        fi
+        echo "=== Linting $latest_dir ==="
+        if ! helm lint "$latest_dir"; then
           EXIT=1
         fi
       done

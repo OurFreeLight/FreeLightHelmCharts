@@ -321,7 +321,7 @@ spec:
           resources:
             {{- toYaml .Values.freelightDAO_API.apiResources | nindent 12 }}
           volumeMounts:
-            {{- if eq .Values.freelightDAO_API.fileStorage.location "local" -}}
+            {{- if eq .Values.freelightDAO_API.fileStorage.location "local" }}
             - name: freelight-dao-api-data
               mountPath: /app/data
             {{- end }}
@@ -331,7 +331,7 @@ spec:
               subPath: gcp.json
             {{- end }}
       volumes:
-        {{- if eq .Values.freelightDAO_API.fileStorage.location "local" -}}
+        {{- if eq .Values.freelightDAO_API.fileStorage.location "local" }}
         - name: freelight-dao-api-data
           persistentVolumeClaim:
             claimName: {{ include "freelight-dao.fullname" . }}-api-pvc
