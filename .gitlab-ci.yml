@@ -1,0 +1,202 @@
+# Required CI variables (set in GitLab project settings):
+#   KUBE_CONFIG               — base64-encoded kubeconfig (group-level, protected)
+#   BOTBLOCKER_VALUES         — values.yaml contents for botblocker  (default scope =
+#                               staging; production-scope variant for prod)
+#   FREELIGHT_LANDING_VALUES  — values.yaml contents for freelight-landing
+#   FREELIGHT_DOCS_VALUES     — values.yaml contents for freelight-docs
+#
+# Production deploys are gated `when: manual` until production-scope CI variables
+# are populated. Without them, the production jobs would fall back to the default-
+# scope (staging) values and deploy staging configs into the production namespace.
+# To enable auto-deploy: add production-scope variants of the *_VALUES vars and
+# drop the `when: manual` lines from the deploy:*:production jobs below.
+#
+# Note on scope: HelmCharts CI deliberately does NOT auto-deploy the
+# freelight-auth, freelight-dao, or freelight charts. Each of those app
+# repos has its own CI that sed-replaces the image tag from package.json
+# at deploy time — if HelmCharts CI ran a parallel helm upgrade, it would
+# use whatever image tag is statically pinned in HELM_CHART_VALUES (which
+# is stale by design) and roll the cluster back to an older image. Chart
+# template changes for those services flow via their respective app CIs:
+# bump HELM_CHART_VERSION in DAO/Auth/Freelight's .gitlab-ci.yml and push
+# to staging or main.
+
+stages:
+  - lint
+  - deploy
+
+# Chart versions pinned here so a bump is a deliberate commit
+# (which also touches the chart dir, satisfying the `changes:` rule
+# below and triggering the per-chart deploy).
+variables:
+  CHART_VERSION_BOTBLOCKER:        "0.6.0"
+  CHART_VERSION_FREELIGHT_LANDING: "0.6.0"
+  CHART_VERSION_FREELIGHT_DOCS:    "0.6.0"
+
+# Reusable deploy job base — provides kubeconfig setup and Helm image.
+.deploy_base:
+  stage: deploy
+  image:
+    name: alpine/k8s:1.29.2
+    entrypoint: [""]
+  before_script:
+    - mkdir -p ~/.kube
+    - echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
+    - chmod 600 ~/.kube/config
+
+# ─── Lint ─────────────────────────────────────────────────────────────────────
+
+lint:charts:
+  stage: lint
+  image:
+    name: alpine/k8s:1.29.2
+    entrypoint: [""]
+  script:
+    # Lint only the LATEST version of each chart. Older versioned dirs are
+    # kept around for rollback / historical reference, and several of them
+    # have pre-existing template bugs (`{{- if ... -}}` trimming newlines
+    # before list items) that we don't want to retroactively fix.
+    - |
+      EXIT=0
+      for chart_root in charts/*/; do
+        latest_dir=$(ls -d "${chart_root}"*/ 2>/dev/null | sort -V | tail -n 1)
+        if [ -z "$latest_dir" ]; then
+          continue
+        fi
+        echo "=== Linting $latest_dir ==="
+        if ! helm lint "$latest_dir"; then
+          EXIT=1
+        fi
+      done
+      exit $EXIT
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+
+# ─── Deploy: botblocker ───────────────────────────────────────────────────────
+
+deploy:botblocker:staging:
+  extends: .deploy_base
+  variables:
+    CHART_NAME: botblocker
+    CHART_VERSION: $CHART_VERSION_BOTBLOCKER
+    NAMESPACE: staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+      changes:
+        - charts/botblocker/**/*
+        - .gitlab-ci.yml
+  environment:
+    name: staging
+  script:
+    - printf '%s' "$BOTBLOCKER_VALUES" > charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+    - helm upgrade --install $CHART_NAME charts/$CHART_NAME/$CHART_VERSION
+        --namespace $NAMESPACE --create-namespace --atomic --timeout 15m
+        --values charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+        --cleanup-on-fail
+
+deploy:botblocker:production:
+  extends: .deploy_base
+  variables:
+    CHART_NAME: botblocker
+    CHART_VERSION: $CHART_VERSION_BOTBLOCKER
+    NAMESPACE: production
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - charts/botblocker/**/*
+        - .gitlab-ci.yml
+      when: manual
+  environment:
+    name: production
+  script:
+    - printf '%s' "$BOTBLOCKER_VALUES" > charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+    - helm upgrade --install $CHART_NAME charts/$CHART_NAME/$CHART_VERSION
+        --namespace $NAMESPACE --create-namespace --atomic --timeout 15m
+        --values charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+        --cleanup-on-fail
+
+# ─── Deploy: freelight-landing ────────────────────────────────────────────────
+
+deploy:freelight-landing:staging:
+  extends: .deploy_base
+  variables:
+    CHART_NAME: freelight-landing
+    CHART_VERSION: $CHART_VERSION_FREELIGHT_LANDING
+    NAMESPACE: staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+      changes:
+        - charts/freelight-landing/**/*
+        - .gitlab-ci.yml
+  environment:
+    name: staging
+  script:
+    - printf '%s' "$FREELIGHT_LANDING_VALUES" > charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+    - helm upgrade --install $CHART_NAME charts/$CHART_NAME/$CHART_VERSION
+        --namespace $NAMESPACE --create-namespace --atomic --timeout 15m
+        --values charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+        --cleanup-on-fail
+
+deploy:freelight-landing:production:
+  extends: .deploy_base
+  variables:
+    CHART_NAME: freelight-landing
+    CHART_VERSION: $CHART_VERSION_FREELIGHT_LANDING
+    NAMESPACE: production
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - charts/freelight-landing/**/*
+        - .gitlab-ci.yml
+      when: manual
+  environment:
+    name: production
+  script:
+    - printf '%s' "$FREELIGHT_LANDING_VALUES" > charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+    - helm upgrade --install $CHART_NAME charts/$CHART_NAME/$CHART_VERSION
+        --namespace $NAMESPACE --create-namespace --atomic --timeout 15m
+        --values charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+        --cleanup-on-fail
+
+# ─── Deploy: freelight-docs ───────────────────────────────────────────────────
+
+deploy:freelight-docs:staging:
+  extends: .deploy_base
+  variables:
+    CHART_NAME: freelight-docs
+    CHART_VERSION: $CHART_VERSION_FREELIGHT_DOCS
+    NAMESPACE: staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
+      changes:
+        - charts/freelight-docs/**/*
+        - .gitlab-ci.yml
+  environment:
+    name: staging
+  script:
+    - printf '%s' "$FREELIGHT_DOCS_VALUES" > charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+    - helm upgrade --install $CHART_NAME charts/$CHART_NAME/$CHART_VERSION
+        --namespace $NAMESPACE --create-namespace --atomic --timeout 15m
+        --values charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+        --cleanup-on-fail
+
+deploy:freelight-docs:production:
+  extends: .deploy_base
+  variables:
+    CHART_NAME: freelight-docs
+    CHART_VERSION: $CHART_VERSION_FREELIGHT_DOCS
+    NAMESPACE: production
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - charts/freelight-docs/**/*
+        - .gitlab-ci.yml
+      when: manual
+  environment:
+    name: production
+  script:
+    - printf '%s' "$FREELIGHT_DOCS_VALUES" > charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+    - helm upgrade --install $CHART_NAME charts/$CHART_NAME/$CHART_VERSION
+        --namespace $NAMESPACE --create-namespace --atomic --timeout 15m
+        --values charts/$CHART_NAME/$CHART_VERSION/custom-values.yaml
+        --cleanup-on-fail
