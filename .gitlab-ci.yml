@@ -1,9 +1,15 @@
 # Required CI variables (set in GitLab project settings):
-#   KUBE_CONFIG               — base64-encoded kubeconfig, protected
-#   BOTBLOCKER_VALUES         — values.yaml contents for botblocker  (staging default;
-#                               add a production-scoped duplicate for prod)
+#   KUBE_CONFIG               — base64-encoded kubeconfig (group-level, protected)
+#   BOTBLOCKER_VALUES         — values.yaml contents for botblocker  (default scope =
+#                               staging; production-scope variant for prod)
 #   FREELIGHT_LANDING_VALUES  — values.yaml contents for freelight-landing
 #   FREELIGHT_DOCS_VALUES     — values.yaml contents for freelight-docs
+#
+# Production deploys are gated `when: manual` until production-scope CI variables
+# are populated. Without them, the production jobs would fall back to the default-
+# scope (staging) values and deploy staging configs into the production namespace.
+# To enable auto-deploy: add production-scope variants of the *_VALUES vars and
+# drop the `when: manual` lines from the deploy:*:production jobs below.
 #
 # Note on scope: HelmCharts CI deliberately does NOT auto-deploy the
 # freelight-auth, freelight-dao, or freelight charts. Each of those app
@@ -99,6 +105,7 @@ deploy:botblocker:production:
       changes:
         - charts/botblocker/**/*
         - .gitlab-ci.yml
+      when: manual
   environment:
     name: production
   script:
@@ -141,6 +148,7 @@ deploy:freelight-landing:production:
       changes:
         - charts/freelight-landing/**/*
         - .gitlab-ci.yml
+      when: manual
   environment:
     name: production
   script:
@@ -183,6 +191,7 @@ deploy:freelight-docs:production:
       changes:
         - charts/freelight-docs/**/*
         - .gitlab-ci.yml
+      when: manual
   environment:
     name: production
   script:
