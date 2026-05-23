@@ -105,7 +105,7 @@ data:
         "/relationships": "public",
         "/resetPassword": "public",
         "/settings": "admin",
-        "/thankYou": "public",
+        "/thank-you": "public",
         "/users": "mod",
         "/verify": "public"
       },
