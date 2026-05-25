@@ -67,6 +67,11 @@ data:
             "label": "Channels"
           },
           {
+            "url": "/donorTiers",
+            "icon": "<span data-feather=\"award\" class=\"align-text-bottom\" id = \"Header_DonorTiers\"></span>",
+            "label": "Donor Tiers"
+          },
+          {
             "url": "/settings",
             "icon": "<span data-feather=\"cpu\" class=\"align-text-bottom\" id = \"Header_Settings\"></span>",
             "label": "Settings"
@@ -82,6 +87,7 @@ data:
         "/budgets": "public",
         "/channel": "public",
         "/channels": "admin",
+        "/donorTiers": "public",
         "/expenses": "public",
         "/forgot": "public",
         "/income": "public",
