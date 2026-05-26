@@ -83,6 +83,7 @@ data:
       "routePermissions": {
         "/agreements": "public",
         "/approvals": "mod",
+        "/bankAccount": "public",
         "/bankAccounts": "public",
         "/budgets": "public",
         "/channel": "public",

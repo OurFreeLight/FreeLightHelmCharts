@@ -93,6 +93,7 @@ data:
         "/agreements": "public",
         "/approvals": "mod",
         "/auth-callback": "public",
+        "/bankAccount": "public",
         "/bankAccounts": "public",
         "/budgets": "public",
         "/channel": "public",
