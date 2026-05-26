@@ -33,6 +33,7 @@ data:
         "/posts": "public",
         "/settings": "user",
         "/accept-invite": "public",
+        "/live": "public",
         "/transparency": "public",
         "/privacy": "public",
         "/terms": "public"
