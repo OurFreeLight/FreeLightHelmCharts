@@ -76,7 +76,14 @@ freelightDAO_API:
     location: local
   data:
     size: 1Gi
-    storageClassName: ""
+    # Pin to the cluster's default StorageClass. The chart's downstream
+    # PVC manifests render storageClassName as empty when this is "",
+    # but the cluster's admission controller injects `longhorn` on create.
+    # On the very next `helm upgrade` (apply:ci-testing rolls images),
+    # helm sees a diff and tries to patch the PVC — but spec is immutable
+    # after create, so the upgrade fails. Pinning here keeps the
+    # manifest and live state in lockstep.
+    storageClassName: "longhorn"
   defaultAdminUser:
     firstName: CI
     lastName: Admin
@@ -148,7 +155,14 @@ database:
   image: postgres:17.2
   storage:
     size: 1Gi
-    storageClassName: ""
+    # Pin to the cluster's default StorageClass. The chart's downstream
+    # PVC manifests render storageClassName as empty when this is "",
+    # but the cluster's admission controller injects `longhorn` on create.
+    # On the very next `helm upgrade` (apply:ci-testing rolls images),
+    # helm sees a diff and tries to patch the PVC — but spec is immutable
+    # after create, so the upgrade fails. Pinning here keeps the
+    # manifest and live state in lockstep.
+    storageClassName: "longhorn"
   rootPassword: ci-testing-pg-root-not-for-prod
   schema: freelight
   username: freelight
