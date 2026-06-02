@@ -13,6 +13,14 @@ custom-values.yaml
 
 env.*/
 
+# Exception: env.ci-testing/ is intentionally checked in. The ci-testing
+# namespace is recreated + torn down by the CI pipeline on every run, and
+# every credential in those values files is test-only (clearly marked
+# "not for prod"). Committing them lets the pipeline `helm install` the
+# chart without piping values through a CI variable.
+!env.ci-testing/
+!env.ci-testing/**
+
 temp.yaml
 temp.yml
 

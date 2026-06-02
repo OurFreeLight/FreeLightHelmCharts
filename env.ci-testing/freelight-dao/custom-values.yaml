@@ -1,0 +1,217 @@
+# freelight-dao custom values for the `ci-testing` namespace.
+#
+# Designed to be torn down + reinstalled on every CI run. Differences vs
+# env.staging/freelight-dao/custom-values.yaml:
+#
+#  - No Gateway / HTTPRoute / Certificate resources (httpRoute.gateway.create
+#    = false + certManager.enabled = false). Tests reach the services via
+#    `kubectl port-forward` so we never need DNS or TLS termination, and
+#    we don't burn Let's Encrypt ACME rate-limit budget on every push.
+#  - Image tag is a placeholder — the CI pipeline overrides it with
+#    --set on apply with the just-built tag.
+#  - Cookie domain is empty so the SPA's `Hot.Cookies.set(..., { domain })`
+#    writes host-only cookies that work against `localhost:5000` through
+#    the port-forward. (Memory note: cookiesDomain mismatches were the
+#    root cause of three of the userType bugs we just chased — keeping
+#    this empty for ci-testing makes that class of bug unrepresentable.)
+#  - Hostnames are placeholders that resolve to nothing externally; they're
+#    only present because the chart templates require non-empty values
+#    even when the gateway is disabled.
+
+replicaCount: 1
+
+imageSettings:
+  pullSecrets: harbor-pull-secret
+  pullPolicy: Always
+
+freelightDAO_frontend:
+  enabled: true
+  useConfigMap: true
+  # CI overrides via --set freelightDAO_frontend.image=... at apply time.
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-dao-frontend:latest-staging
+  environment: ci-testing
+  title: "FreeLight DAO - CI Testing"
+  recaptchaSiteKey: ""
+  # Tests hit port-forwarded localhost:8100 → freelight-auth-frontend.
+  authUrl: "http://localhost:8100"
+  authClientId: "freelight-dao"
+  httpRoute:
+    hostnames:
+      - dao.ci-testing.invalid
+
+freelightDAO_API:
+  enabled: true
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-dao-api:latest-staging
+  mcp:
+    enabled: false
+  httpRoute:
+    hostnames:
+      - api.ci-testing.invalid
+  auth:
+    # In-cluster service DNS — the API talks to FreelightAuth pod-to-pod,
+    # not through the port-forward.
+    url: "http://freelight-auth-frontend.ci-testing.svc.cluster.local"
+    jwksUrl: "http://freelight-auth-frontend.ci-testing.svc.cluster.local/.well-known/jwks.json"
+    # Deterministic fake token for tests; matches the value below on the
+    # auth chart at freelightAuth_backend.dao.serviceToken.
+    serviceToken: "ci-testing-dao-auth-service-token-deadbeefdeadbeef"
+  logLevel: verbose
+  nodeStartArgs: ""
+  hotStartArgs: ""
+  debugEnabled: true
+  swaggerUIEnabled: false
+  baseWebUrl: http://localhost:5000
+  baseApiUrl: http://localhost:5001
+  jwtSecretKey: ci-testing-jwt-secret-not-for-prod
+  # TESTS_PASSWORD is what /v1/freelight/issueTestAdminToken gates on.
+  # Setting this enables the test-token mint endpoint so the e2e job
+  # can sign in as admin without going through the full OIDC dance.
+  testsPassword: "ci-testing-tests-password"
+  settings:
+    membershipBenefits: false
+    anyoneCanSignAgreements: true
+  fileStorage:
+    location: local
+  data:
+    size: 1Gi
+    storageClassName: ""
+  defaultAdminUser:
+    firstName: CI
+    lastName: Admin
+    displayName: ci-admin
+    email: ci-admin@ci-testing.invalid
+    password: ci-testing-admin-password-not-for-prod
+  openTelemetry:
+    type: "none"
+    url: ""
+    name: "ci-testing-freelight-dao"
+  recaptchaKey: ""
+  aws:
+    ses: { region: "", accessKey: "", secretKey: "" }
+    s3:  { region: "", accessKey: "", secretKey: "", bucket: "", encryptedBucket: "" }
+  ratelimiter:
+    redis: { enabled: false, host: localhost, port: 6379, username: "", password: "" }
+  database:
+    server: localhost
+    port: 5432
+    username: freelight
+    password: ci-testing-pg-password-not-for-prod
+    schema: freelight
+    ssl: { enabled: false, rejectUnauthorized: false, ca: "", key: "", cert: "" }
+    migrations:
+      enabled: true
+      image: harbor.higheredgesoftware.com/ourfreelight/postgres-utils:latest-staging
+    backup:
+      enabled: false
+      image: harbor.higheredgesoftware.com/ourfreelight/postgres-utils:latest-staging
+      schedule: "0 0 1 1 *"
+      type: "aws-s3"
+      password: ""
+      aws: { accessKeyId: "", secretAccessKey: "", defaultRegion: "", bucketName: "", bucketPath: "" }
+  databaseRead:
+    server: ""
+    port: 5432
+    username: ""
+    password: ""
+    schema: ""
+    ssl: { enabled: false, rejectUnauthorized: false, ca: "", key: "", cert: "" }
+  garnet:
+    server: localhost
+    port: 6379
+    tls: false
+    tlsInsecure: false
+    cluster: false
+    username: ""
+    password: ""
+  garnetPubSub:
+    server: localhost
+    port: 6379
+    tls: false
+    tlsInsecure: false
+    username: ""
+    password: ""
+  apiResources:
+    limits:   { cpu: 500m,  memory: 512Mi }
+    requests: { cpu: 50m,   memory: 128Mi }
+  frontendResources: {}
+
+botBlocker:
+  enabled: true
+  url: "http://botblocker.ci-testing.svc.cluster.local:80"
+  authToken: "ci-testing-botblocker-auth-token-not-for-prod"
+
+database:
+  deploy: true
+  deployProxy: false
+  image: postgres:17.2
+  storage:
+    size: 1Gi
+    storageClassName: ""
+  rootPassword: ci-testing-pg-root-not-for-prod
+  schema: freelight
+  username: freelight
+  password: ci-testing-pg-password-not-for-prod
+
+garnet:
+  deploy: true
+  image: ghcr.io/microsoft/garnet:1
+
+garnetPubSub:
+  deploy: true
+  image: ghcr.io/microsoft/garnet:1
+
+dicebear:
+  deploy: true
+  image: dicebear/api:2
+  httpRoute:
+    hostnames:
+      - avatars.ci-testing.invalid
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+
+httpRoute:
+  gateway:
+    # CRITICAL: don't create a Gateway in ci-testing. The HTTPRoute objects
+    # the chart still generates will reference a non-existent gateway in
+    # parentRefs, which means external-dns sees nothing and no DNS records
+    # are touched. The HTTPRoutes themselves are harmless garbage that
+    # gets cleaned up at teardown.
+    name: "ci-testing-noop-gateway"
+    namespace: ""
+    create: false
+    className: "eg"
+    tls:
+      certificateRefs: []
+
+certManager:
+  # CRITICAL: no ACME / Let's Encrypt traffic from ci-testing. Burning
+  # the staging account's rate-limit budget on tear-and-rebuild cycles
+  # would break real cert renewals.
+  enabled: false
+  email: ""
+  clusterIssuer: ""
+  solver: "http01"
+  dns01: {}
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
