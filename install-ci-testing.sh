@@ -18,7 +18,7 @@ set -euo pipefail
 readonly NS="ci-testing"
 readonly DAO_TAG="${1:-latest-staging}"
 readonly AUTH_TAG="${2:-latest-staging}"
-readonly DAO_CHART_VERSION="${DAO_CHART_VERSION:-0.6.2}"
+readonly DAO_CHART_VERSION="${DAO_CHART_VERSION:-0.6.3}"
 readonly AUTH_CHART_VERSION="${AUTH_CHART_VERSION:-0.1.2}"
 readonly BB_CHART_VERSION="${BB_CHART_VERSION:-0.6.0}"
 

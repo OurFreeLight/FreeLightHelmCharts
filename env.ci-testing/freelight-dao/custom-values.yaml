@@ -63,10 +63,12 @@ freelightDAO_API:
   baseWebUrl: http://localhost:5000
   baseApiUrl: http://localhost:5001
   jwtSecretKey: ci-testing-jwt-secret-not-for-prod
-  # TESTS_PASSWORD is what /v1/freelight/issueTestAdminToken gates on.
-  # Setting this enables the test-token mint endpoint so the e2e job
-  # can sign in as admin without going through the full OIDC dance.
+  # TESTS_PASSWORD + TEST_JWT_SECRET are the pair AppAPI.ts checks to
+  # enable signTestToken(). Both must be set; with just TESTS_PASSWORD
+  # the endpoint passes the password gate but the next sign call throws
+  # "Test mode not initialized". Added to the chart in 0.6.3.
   testsPassword: "ci-testing-tests-password"
+  testJwtSecret: "ci-testing-jwt-test-secret-not-for-prod-must-be-32-chars"
   settings:
     membershipBenefits: false
     anyoneCanSignAgreements: true
