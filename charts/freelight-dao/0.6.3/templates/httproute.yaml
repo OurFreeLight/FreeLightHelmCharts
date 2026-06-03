@@ -46,6 +46,23 @@ spec:
     - {{ . | quote }}
     {{- end }}
   rules:
+    # Long-lived SSE stream for channel chat. Envoy Gateway's default route
+    # request timeout (15s) resets this stream as a total-duration limit,
+    # which surfaced in the browser as ERR_HTTP2_PROTOCOL_ERROR and broke
+    # real-time chat (every 15s the stream died and the client reconnected).
+    # A more-specific path match takes precedence over the catch-all rule
+    # below, so only this endpoint gets the disabled timeout. "0s" disables
+    # the timeout per the Gateway API spec. The DAO backend additionally
+    # sends a 10s SSE keepalive comment to defend against idle timeouts.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/channels/streamChannelUpdates
+      timeouts:
+        request: "0s"
+      backendRefs:
+        - name: {{ $fullName }}-api-service
+          port: 5001
     - backendRefs:
         - name: {{ $fullName }}-api-service
           port: 5001
