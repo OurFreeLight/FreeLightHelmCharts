@@ -1,0 +1,267 @@
+# Default values for freelight-dao.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+imageSettings:
+  pullSecrets: ""
+  pullPolicy: IfNotPresent
+
+freelightDAO_frontend:
+  enabled: true
+  useConfigMap: true
+  image: ourfreelight/freelight-dao-frontend:0.5.4-staging
+  environment: staging
+  title: "FreeLight DAO"
+  recaptchaSiteKey: ""
+  httpRoute:
+    hostnames:
+      - staging.freelight.org
+
+freelightDAO_API:
+  enabled: true
+  image: ourfreelight/freelight-dao-api:0.5.4-staging
+  httpRoute:
+    hostnames:
+      - api.freelight.org
+  logLevel: verbose
+  nodeStartArgs: ""
+  hotStartArgs: ""
+  debugEnabled: false
+  swaggerUIEnabled: true
+  baseWebUrl: http://localhost:5000
+  baseApiUrl: http://localhost:5001
+  jwtSecretKey: hw4978a97w3ha78w3hartaw345
+  testsPassword: ""
+  # HS256 secret used to sign test JWTs minted by
+  # /v1/freelight/issueTestAdminToken (and the new issueTestUserToken).
+  # Empty in prod / staging so test mode stays off; CI environments set
+  # it to enable signTestToken().
+  testJwtSecret: ""
+  settings: 
+    membershipBenefits: true
+    anyoneCanSignAgreements: false
+  mcp:
+    enabled: false
+    route: "/mcp"
+  # FreelightAuth delegation (AUTH-5). Leave blank to use the default
+  # in-cluster svc URL (http://freelight-auth-backend.{namespace}.svc.cluster.local:8100).
+  #
+  # serviceToken: shared bearer token used by FreelightAuth to call
+  # /v1/freelight/getMembershipStatus for the display-name membership
+  # gate. Must match `freelightAuth_backend.dao.serviceToken` on the
+  # freelight-auth chart. Leave blank to disable the endpoint (returns 503).
+  auth:
+    url: ""
+    jwksUrl: ""
+    serviceToken: ""
+  emailHashing:
+    # When enabled, emails are stored as HMAC-SHA256 hashes in the database.
+    # WARNING: Once enabled on an existing database, all existing plaintext email
+    # rows must be migrated before login will work for those users.
+    enabled: false
+    secret: ""
+  extraEnv: []
+  fileStorage:
+    location: local
+  data:
+    size: 8Gi
+    storageClassName: ""
+  defaultAdminUser:
+    firstName: Bobbithy
+    lastName: Derpitty
+    displayName: AdminGuy
+    email: email@email.com
+    password: m7sa4w5asw45m8aw45m
+  openTelemetry:
+    type: "none"
+    url: ""
+    name: "freelight-dao"
+    gcp: 
+      projectId: ""
+      authKeySecretName: ""
+    azure:
+      connectionString: ""
+  recaptchaKey:
+  aws:
+    ses:
+      region: us-west-2
+      accessKey: 
+      secretKey: 
+    s3:
+      region: us-west-2
+      accessKey: 
+      secretKey: 
+      bucket: 
+      encryptedBucket: 
+  ratelimiter: 
+    redis: 
+      enabled: false
+      host: localhost
+      port: 6379
+      username: ""
+      password: ""
+  database:
+    server: localhost
+    port: 5432
+    username: awuiyh34ygsd
+    password: 3ui45hiyuawer
+    schema: freelight_dao
+    ssl:
+      enabled: false
+      rejectUnauthorized: true
+      ca: 
+      key: 
+      cert: 
+    migrations: 
+      enabled: true
+      image: ourfreelight/postgres-utils:0.5.4
+    backup:
+      enabled: true
+      image: ourfreelight/postgres-utils:0.5.4
+      schedule: "0 1 * * 5"
+      type: "aws-s3"
+      password: "ah3475aw3h4768aw3h"
+      aws:
+        accessKeyId: ""
+        secretAccessKey: ""
+        defaultRegion: ""
+        bucketName: ""
+        bucketPath: ""
+  databaseRead:
+    server: 
+    port: 
+    username: 
+    password: 
+    schema: 
+    ssl:
+      enabled: false
+      rejectUnauthorized: true
+      ca: 
+      key: 
+      cert: 
+  garnet:
+    server: localhost
+    port: 6379
+    tls: false
+    tlsInsecure: false
+    username: 
+    password: 
+    cluster: false
+  garnetPubSub:
+    server: localhost
+    port: 6379
+    tls: false
+    tlsInsecure: false
+    username: 
+    password: 
+  apiResources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  frontendResources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+database:
+  deploy: true
+  deployProxy: false
+  image: postgres:17.2
+  storage:
+    size: 20Gi
+    storageClassName: ""
+  schema: freelight_dao
+  username: awuiyh34ygsd
+  password: 3ui45hiyuawer
+
+botBlocker:
+  enabled: false
+  url: "http://localhost:8080"
+  authToken: "4xdtrgw34a34"
+
+garnet:
+  deploy: true
+  image: ghcr.io/microsoft/garnet:1
+
+garnetPubSub:
+  deploy: false
+  image: ghcr.io/microsoft/garnet:1
+
+dicebear:
+  deploy: true
+  image: dicebear/api:2
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  httpRoute:
+    hostnames:
+      - dicebear.freelight.org
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+httpRoute:
+  gateway:
+    name: ""
+    namespace: ""
+    create: false
+    className: "eg"
+    tls:
+      certificateRefs: []
+
+certManager:
+  enabled: true
+  email: admin@freelight.org
+  clusterIssuer: ""
+  solver: "http01"
+  dns01: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -1,0 +1,82 @@
+# botblocker custom values for the `ci-testing` namespace.
+#
+# numHashers: "0" intentionally — the hasher pod normally chugs CPU
+# pre-computing 724MB-buffer XXH3 hashes. We don't want that running
+# in ci-testing; instead the seed-bigbuff-hashes-ci-testing.sh script
+# copies 100 rows from staging's `bigbuff_hashes` table after the
+# Postgres migrations finish, which gives registration tests real,
+# server-verifiable seeds without the per-hash compute burn.
+
+replicaCount: 1
+
+image:
+  repository: ourfreelight/botblocker_server:0.1.0
+  pullPolicy: Always
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Token the DAO + Auth pass when calling /v1/botblocker/*. Matches the
+# value in env.ci-testing/freelight-dao + env.ci-testing/freelight-auth.
+authToken: "ci-testing-botblocker-auth-token-not-for-prod"
+# Disable the hasher pod entirely.
+numHashers: "0"
+
+database:
+  server: freelight-dao-db-service.ci-testing.svc.cluster.local
+  port: 5432
+  username: freelight
+  password: ci-testing-pg-password-not-for-prod
+  schema: freelight
+  ssl:
+    enabled: false
+    rejectUnauthorized: false
+    ca: ""
+    key: ""
+    cert: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+httpRoute:
+  enabled: false
+  gateway:
+    name: "ci-testing-noop-gateway"
+    namespace: ""
+  hostnames:
+    - botblocker.ci-testing.invalid
+
+certManager:
+  enabled: false
+  email: ""
+  clusterIssuer: ""
+  solver: "http01"
+  dns01: {}
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+
+volumes: []
+volumeMounts: []
+
+nodeSelector:
+  kubernetes.io/arch: amd64
+tolerations: []
+affinity: {}

@@ -1,0 +1,22 @@
+1. Get the application URL by running these commands:
+{{- if .Values.freelightDAO_frontend.enabled }}
+{{- range .Values.freelightDAO_frontend.httpRoute.hostnames }}
+  https://{{ . }}
+{{- end }}
+{{- end }}
+{{- if .Values.freelightDAO_API.enabled }}
+{{- range .Values.freelightDAO_API.httpRoute.hostnames }}
+  https://{{ . }}
+{{- end }}
+{{- end }}
+{{- if .Values.dicebear.deploy }}
+{{- range .Values.dicebear.httpRoute.hostnames }}
+  https://{{ . }}
+{{- end }}
+{{- end }}
+{{- if .Values.freelightDAO_API.debugEnabled }}
+WARNING: DEBUG MODE IS ENABLED. PORT 9229 IS OPEN. You will have to port-forward into the pod to access it.
+{{- end }}
+{{- if .Values.freelightDAO_API.swaggerUIEnabled }}
+WARNING: SWAGGER UI IS ENABLED. You can access it on /swagger/
+{{- end }}

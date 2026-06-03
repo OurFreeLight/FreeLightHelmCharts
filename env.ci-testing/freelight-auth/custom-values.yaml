@@ -1,0 +1,117 @@
+# freelight-auth custom values for the `ci-testing` namespace.
+#
+# Deployed AFTER the freelight-dao chart (which brings up Postgres + Garnet)
+# so it can re-use those in-cluster services.
+#
+# RSA keys: intentionally left empty here. The auth backend auto-generates
+# a fresh RSA-2048 keypair on first start when RSA_PRIVATE_KEY is unset
+# (CLAUDE.md: "Auto-generates keypair if unset (dev only)."). For an
+# ephemeral CI environment that's exactly what we want — no shared key
+# material on disk, fresh signing identity per pipeline.
+
+replicaCount: 1
+
+imageSettings:
+  pullSecrets: harbor-pull-secret
+  pullPolicy: Always
+
+freelightAuth_frontend:
+  enabled: true
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-auth-frontend:latest-staging
+  environment: ci-testing
+  replicaCount: 1
+  httpRoute:
+    hostnames:
+      - auth.ci-testing.invalid
+
+freelightAuth_backend:
+  image: harbor.higheredgesoftware.com/ourfreelight/freelight-auth-backend:latest-staging
+  logLevel: verbose
+  baseWebUrl: http://localhost:8100
+  baseApiUrl: http://localhost:8100
+  # Empty → backend generates a fresh keypair at startup.
+  jwtSecretKey: ""
+  rsaPrivateKey: ""
+  rsaPublicKey: ""
+  aws:
+    ses: { region: "", accessKey: "", secretKey: "" }
+  database:
+    # Postgres bundled with the freelight-dao chart in this same namespace.
+    server: freelight-dao-db-service.ci-testing.svc.cluster.local
+    port: 5432
+    username: freelight
+    password: ci-testing-pg-password-not-for-prod
+    schema: freelight_auth
+    ssl: { enabled: false, rejectUnauthorized: false, ca: "", key: "", cert: "" }
+  garnet:
+    # The freelight-dao chart names its garnet Service `<release>-garnet-service`
+    # (verified: `kubectl -n ci-testing get svc` shows freelight-dao-garnet-service).
+    server: freelight-dao-garnet-service.ci-testing.svc.cluster.local
+    port: 6379
+    tls: false
+    tlsInsecure: false
+    cluster: false
+    username: ""
+    password: ""
+  garnetPubSub:
+    server: freelight-dao-garnet-pubsub-service.ci-testing.svc.cluster.local
+    port: 6379
+    tls: false
+    tlsInsecure: false
+    username: ""
+    password: ""
+  botBlocker:
+    enabled: true
+    url: "http://botblocker.ci-testing.svc.cluster.local:80"
+    authToken: "ci-testing-botblocker-auth-token-not-for-prod"
+  dao:
+    # In-cluster DAO API service for membership-status lookups.
+    # Service is named `freelight-dao-api-service` (not `freelight-dao-api`).
+    url: "http://freelight-dao-api-service.ci-testing.svc.cluster.local:5001"
+    serviceToken: "ci-testing-dao-auth-service-token-deadbeefdeadbeef"
+  membershipBenefitsEnabled: false
+  openTelemetry:
+    type: "none"
+    url: ""
+    name: "ci-testing-freelight-auth"
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+httpRoute:
+  gateway:
+    name: "ci-testing-noop-gateway"
+    namespace: ""
+    create: false
+    className: "eg"
+    tls:
+      certificateRefs: []
+
+certManager:
+  enabled: false
+  email: ""
+  clusterIssuer: ""
+  solver: "http01"
+  dns01: {}
+
+resources: {}
+autoscaling:
+  enabled: false
+nodeSelector: {}
+tolerations: []
+affinity: {}
