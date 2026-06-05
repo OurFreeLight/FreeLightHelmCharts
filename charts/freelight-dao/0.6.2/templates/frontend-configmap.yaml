@@ -115,7 +115,7 @@ data:
         "/resetPassword": "public",
         "/settings": "admin",
         "/thank-you": "public",
-        "/users": "mod",
+        "/users": "admin",
         "/verify": "public"
       },
       "siteKey": {{ default "" .Values.freelightDAO_frontend.recaptchaSiteKey | quote }},
