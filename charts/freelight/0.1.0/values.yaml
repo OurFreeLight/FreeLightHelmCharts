@@ -19,6 +19,11 @@ freelight_frontend:
   httpRoute:
     hostnames:
       - staging-freelight.higheredgesoftware.com
+    # Envoy route timeouts. The chat SSE stream (/v1/chatMessages/streamChannelUpdates)
+    # is long-lived, so the request timeout must be disabled or Envoy cuts it
+    # (~15s default) and the browser's HTTP/2 stream resets. 0s = no timeout.
+    timeouts:
+      request: "0s"
 
 freelight_backend:
   image: harbor.higheredgesoftware.com/ourfreelight/freelight-backend:0.4.1-staging

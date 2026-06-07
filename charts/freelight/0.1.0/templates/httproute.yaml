@@ -27,6 +27,15 @@ spec:
     - backendRefs:
         - name: {{ $frontendName }}
           port: 80
+      # /v1/chatMessages/streamChannelUpdates is a long-lived SSE stream. Without
+      # disabling the Envoy route request timeout it is cut (~15s default) and the
+      # HTTP/2 stream to the browser resets (ERR_HTTP2_PROTOCOL_ERROR). 0s = no
+      # timeout (matches the DAO API route). Configured via
+      # freelight_frontend.httpRoute.timeouts (defaulted in values.yaml).
+      {{- with .Values.freelight_frontend.httpRoute.timeouts }}
+      timeouts:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 {{- if and .Values.freelight_backend.apiHttpRoute .Values.freelight_backend.apiHttpRoute.hostnames }}
 ---
 # Optional dedicated API hostname → backend SEA directly. Most apps don't
